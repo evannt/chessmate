@@ -1,5 +1,7 @@
 package chess;
 
+import engine.Searcher;
+import util.BitUtil;
 import util.BoardUtil;
 
 public class Move {
@@ -13,95 +15,66 @@ public class Move {
 	private static final int EN_PASSANT_FLAG = 0x400000;
 	private static final int CASTLE_FLAG = 0x800000;
 
-	private final int moveEncoding;
-
-	private int score;
-
-	public Move(int src, int dst, int piece, int promotedPiece, int captureFlag, int doublePawnPushFlag,
-			int enPassantFlag, int castleFlag) {
-		moveEncoding = (src) | (dst << 6) |
-				(piece << 12) | (promotedPiece << 16) | (captureFlag << 20) |
-				(doublePawnPushFlag << 21) | (enPassantFlag << 22) | (castleFlag << 23);
+	public static int encodeMove(int src, int dst, int piece, int promotedPiece, int captureFlag,
+			int doublePawnPushFlag, int enPassantFlag, int castleFlag) {
+		return (src) | (dst << 6) | (piece << 12) | (promotedPiece << 16) | (captureFlag << 20)
+				| (doublePawnPushFlag << 21) | (enPassantFlag << 22) | (castleFlag << 23);
 	}
 
-//	public void scoreMove(Position pos) {
-//		if (getCaptureFlag() != 0) {
-//			int targetPiece = PieceType.WPAWN.getKey();
-//
-//			int start = pos.getTurn() == Piece.WHITE ? PieceType.BPAWN.getKey() : PieceType.WPAWN.getKey();
-//			int end = pos.getTurn() == Piece.WHITE ? PieceType.BKING.getKey() : PieceType.WKING.getKey();
-//			for (int key = start; key <= end; key++) {
-//				if (BitUtil.getBit(pos.getBitboards()[key], getDst()) == 1) {
-//					targetPiece = key;
-//					break;
-//				}
-//			}
-//			setScore(Searcher.MVV_LVA[getPiece()][targetPiece]);
-////			return MVV_LVA[move.getPiece()][targetPiece];
-//		}
-//	}
+	public static int scoreMove(Position pos, int moveEncoding) {
+		if (getCaptureFlag(moveEncoding) != 0) {
+			int targetPiece = PieceType.WPAWN.getKey();
 
-	public void setScore(int score) {
-		this.score = score;
+			int start = pos.getTurn() == Piece.WHITE ? PieceType.BPAWN.getKey() : PieceType.WPAWN.getKey();
+			int end = pos.getTurn() == Piece.WHITE ? PieceType.BKING.getKey() : PieceType.WKING.getKey();
+			for (int key = start; key <= end; key++) {
+				if (BitUtil.getBit(pos.getBitboards()[key], getDst(moveEncoding)) == 1) {
+					targetPiece = key;
+					break;
+				}
+			}
+			return Searcher.MVV_LVA[getPiece(moveEncoding)][targetPiece];
+		}
+		return 0;
 	}
 
-	public int getScore() {
-		return score;
-	}
-
-	public int getMoveEncoding() {
-		return moveEncoding;
-	}
-
-	public String decodeMove() {
-		String src = BoardUtil.getIndexAsSquare(getSrc());
-		String dst = BoardUtil.getIndexAsSquare(getDst());
-		String promotedPiece = PieceType.getIdByKey(getPromotedPiece()).toLowerCase();
+	public static String decodeMove(int moveEncoding) {
+		String src = BoardUtil.getIndexAsSquare(Move.getSrc(moveEncoding));
+		String dst = BoardUtil.getIndexAsSquare(Move.getDst(moveEncoding));
+		String promotedPiece = PieceType.getIdByKey(Move.getPromotedPiece(moveEncoding)).toLowerCase();
 		return src + dst + (promotedPiece.equals(".") ? "" : promotedPiece);
 	}
 
-	public int getSrc() {
+	public static int getSrc(int moveEncoding) {
 		return moveEncoding & SRC;
 	}
 
-	public int getDst() {
+	public static int getDst(int moveEncoding) {
 		return (moveEncoding & DST) >>> 6;
 	}
 
-	public int getPiece() {
+	public static int getPiece(int moveEncoding) {
 		return (moveEncoding & PIECE) >>> 12;
 	}
 
-	public int getPromotedPiece() {
+	public static int getPromotedPiece(int moveEncoding) {
 		return (moveEncoding & PROMOTED_PIECE) >>> 16;
 	}
 
-	public int getCaptureFlag() {
+	public static int getCaptureFlag(int moveEncoding) {
 		return (moveEncoding & CAPTURE_FLAG);
 	}
 
-	public int getDoublePawnPushFlag() {
+	public static int getDoublePawnPushFlag(int moveEncoding) {
 		return (moveEncoding & DOUBLE_PAWN_PUSH_FLAG);
 	}
 
-	public int getEnPassantFlag() {
+	public static int getEnPassantFlag(int moveEncoding) {
 		return (moveEncoding & EN_PASSANT_FLAG);
 	}
 
-	public int getCastleFlag() {
+	public static int getCastleFlag(int moveEncoding) {
 		return (moveEncoding & CASTLE_FLAG);
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (o == null) {
-			return false;
-		}
-		if (!(o instanceof Move)) {
-			return false;
-		}
-		Move move = (Move) o;
-		return moveEncoding == move.moveEncoding;
 	}
 
 }

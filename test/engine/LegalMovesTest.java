@@ -32,25 +32,14 @@ class LegalMovesTest {
 	@BeforeAll
 	public static void setup() throws IOException {
 		position = new Position();
-//		position.setPosition(Position.START_POSITION);
-//		position.setPosition(Position.POSITION_2);
-//		position.setPosition("rnbqkbnr/pppppppp/8/8/8/P7/1PPPPPPP/RNBQKBNR b KQkq - 0 1");
+		position.setPosition(Position.START_POSITION);
 //		position.setPosition("rnbqkbnr/ppp1pppp/3p4/8/8/P7/1PPPPPPP/RNBQKBNR w KQkq - 0 1");
-//		position.setPosition("rnbqkbnr/ppp1pppp/3p4/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq - 0 1");
+//		position.setPosition("rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1");
 //		position.setPosition("rnbqkbnr/1pp1pppp/p2p4/8/P7/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1");
 //		position.setPosition("rnbqkbnr/1pp1pppp/p2p4/P7/8/8/1PPPPPPP/RNBQKBNR b KQkq - 0 1");
-//		position.setPosition("rnbqkbnr/2p1pppp/pp1p4/P7/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1");
-//		position.setPosition("rnbqkbnr/2p1pppp/pP1p4/8/8/8/1PPPPPPP/RNBQKBNR b KQkq - 0 1");
-//		position.setPosition("rnbqkbnr/4pppp/pPpp4/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1");
-//		position.setPosition("rnbqkbnr/1P2pppp/p1pp4/8/8/8/1PPPPPPP/RNBQKBNR b KQkq - 0 1");
-//		position.setPosition("rnbqkbnr/1P3ppp/p1ppp3/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1");
-//		position.setPosition("Qnbqkbnr/5ppp/p1ppp3/8/8/8/1PPPPPPP/RNBQKBNR b KQk - 0 1");
-//		position.setPosition("Qnbqkbnr/6pp/p1pppp2/8/8/8/1PPPPPPP/RNBQKBNR w KQk - 0 1");
-//		position.setPosition("Qnbqkbnr/6pp/p1pppp2/8/8/1P6/2PPPPPP/RNBQKBNR b KQk - 0 1");
-//		position.setPosition("Qnb1kbnr/6pp/p1pppp2/q7/8/1P6/2PPPPPP/RNBQKBNR w KQk - 0 1");
-//		position.setPosition("Qnb1kbnr/6pp/p1pppp2/q7/1P6/8/2PPPPPP/RNBQKBNR b KQk - 0 1");
-//		position.setPosition("Qnb1kbnr/7p/p1ppppp1/q7/1P6/8/2PPPPPP/RNBQKBNR w KQk - 0 1");
-		position.setPosition("Qnb1kbnr/7p/p1ppppp1/qP6/8/8/2PPPPPP/RNBQKBNR b KQk - 0 1");
+//		position.setPosition("rnbqkbnr/2p1pppp/p2p4/Pp6/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1");
+//		position.setPosition(Position.TRICKY_POSITION);
+//		position.setPosition("r3k2r/p1ppqpb1/bn1Ppnp1/4N3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1");
 		perft1Results = loadPerftResults(1);
 		perft2Results = loadPerftResults(2);
 		perft3Results = loadPerftResults(3);
@@ -62,7 +51,7 @@ class LegalMovesTest {
 	@Test
 	public void testPerft() {
 //		doPerft(position, 6, new long[] { 20, 400, 8902, 197281, 4865609, 119060324, 3195901860L, 84998978956L });
-		debugPerft(1);
+		debugPerft(6);
 //		position.setPosition("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -");
 //		doPerft(position, 5, new long[] { 14, 191, 2812, 43238, 674624, 11030083, 178633661 });
 
@@ -100,6 +89,13 @@ class LegalMovesTest {
 //		return nodes;
 //	}
 
+//	public static long perft(int depth) {
+//		if (depth == 0) {
+//			return 1;
+//		}
+//		return 0;
+//	}
+
 	private static final long debugPerft(int depth) {
 		return debugPerftAuxiliary(depth, depth);
 	}
@@ -114,15 +110,16 @@ class LegalMovesTest {
 //		}
 		long nodes = 0;
 		long currNodes = 0;
-		UndoInfo ui = new UndoInfo();
+
 		for (int mi = 0; mi < moves.moveCount; mi++) {
-			Move move = moves.moves[mi];
+			int move = moves.mvs[mi];
+			UndoInfo ui = new UndoInfo();
 			if (!position.makeMove(move, ui)) {
 				continue;
 			}
 			currNodes = debugPerftAuxiliary(depth, currentDepth - 1);
 			nodes += currNodes;
-			String moveString = move.decodeMove();
+			String moveString = Move.decodeMove(move);
 			String errorMessage = moveString;
 			System.out.println(moveString + ": " + currNodes);
 			if (depth == currentDepth) {

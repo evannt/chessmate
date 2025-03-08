@@ -1,7 +1,5 @@
 package chess;
 
-import engine.MoveGenerator;
-import engine.MoveGenerator.MoveList;
 import gui.ChessBoardPainter;
 import util.BitUtil;
 import util.BoardUtil;
@@ -9,7 +7,7 @@ import util.BoardUtil;
 public class Position {
 
 	public static final String START_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-	public static final String POSITION_2 = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+	public static final String TRICKY_POSITION = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
 
 	public static final int WHITE_KING_CASTLE = 1;
 	public static final int WHITE_QUEEN_CASTLE = 2;
@@ -23,16 +21,9 @@ public class Position {
 	private int epSquare;
 	private int castleRights;
 
-	private static final int[] CASTLE_RIGHTS_UPDATES = {
-			7, 15, 15, 15, 3, 15, 15, 11,
-			15, 15, 15, 15, 15, 15, 15, 15,
-			15, 15, 15, 15, 15, 15, 15, 15,
-			15, 15, 15, 15, 15, 15, 15, 15,
-			15, 15, 15, 15, 15, 15, 15, 15,
-			15, 15, 15, 15, 15, 15, 15, 15,
-			15, 15, 15, 15, 15, 15, 15, 15,
-			13, 15, 15, 15, 12, 15, 15, 14,
-	};
+	private static final int[] CASTLE_RIGHTS_UPDATES = { 7, 15, 15, 15, 3, 15, 15, 11, 15, 15, 15, 15, 15, 15, 15, 15,
+			15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+			15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 13, 15, 15, 15, 12, 15, 15, 14, };
 
 	private int halfMoveClock;
 	private int fullMoveCount;
@@ -55,18 +46,17 @@ public class Position {
 		fullMoveCount = 1;
 	}
 
-	public boolean makeMove(Move move, UndoInfo undoInfo) {
-//		UndoInfo undoInfo = new UndoInfo(this);
+	public boolean makeMove(int move, UndoInfo undoInfo) {
 		undoInfo.updateInfo(this);
 
-		int src = move.getSrc();
-		int dst = move.getDst();
-		int piece = move.getPiece();
-		int promotedPiece = move.getPromotedPiece();
-		int captureFlag = move.getCaptureFlag();
-		int doublePawnPushFlag = move.getDoublePawnPushFlag();
-		int enPassantFlag = move.getEnPassantFlag();
-		int castleFlag = move.getCastleFlag();
+		int src = Move.getSrc(move);
+		int dst = Move.getDst(move);
+		int piece = Move.getPiece(move);
+		int promotedPiece = Move.getPromotedPiece(move);
+		int captureFlag = Move.getCaptureFlag(move);
+		int doublePawnPushFlag = Move.getDoublePawnPushFlag(move);
+		int enPassantFlag = Move.getEnPassantFlag(move);
+		int castleFlag = Move.getCastleFlag(move);
 
 		bitboards[piece] = BitUtil.popBit(bitboards[piece], src);
 		bitboards[piece] = BitUtil.setBit(bitboards[piece], dst);
@@ -98,20 +88,16 @@ public class Position {
 		}
 		if (castleFlag != 0) {
 			int key = turn == Piece.WHITE ? PieceType.WROOK.getKey() : PieceType.BROOK.getKey();
-			int rookSrcSq = turn == Piece.WHITE ?
-					dst == BoardUtil.getSquareAsIndex("g1") ?
-							BoardUtil.getSquareAsIndex("h1") :
-							BoardUtil.getSquareAsIndex("a1") :
-					dst == BoardUtil.getSquareAsIndex("g8") ?
-							BoardUtil.getSquareAsIndex("h8") :
-							BoardUtil.getSquareAsIndex("a8");
-			int rookDstSq = turn == Piece.WHITE ?
-					rookSrcSq == BoardUtil.getSquareAsIndex("h1") ?
-							BoardUtil.getSquareAsIndex("f1") :
-							BoardUtil.getSquareAsIndex("d1") :
-					rookSrcSq == BoardUtil.getSquareAsIndex("h8") ?
-							BoardUtil.getSquareAsIndex("f8") :
-							BoardUtil.getSquareAsIndex("d8");
+			int rookSrcSq = turn == Piece.WHITE
+					? dst == BoardUtil.getSquareAsIndex("g1") ? BoardUtil.getSquareAsIndex("h1")
+							: BoardUtil.getSquareAsIndex("a1")
+					: dst == BoardUtil.getSquareAsIndex("g8") ? BoardUtil.getSquareAsIndex("h8")
+							: BoardUtil.getSquareAsIndex("a8");
+			int rookDstSq = turn == Piece.WHITE
+					? rookSrcSq == BoardUtil.getSquareAsIndex("h1") ? BoardUtil.getSquareAsIndex("f1")
+							: BoardUtil.getSquareAsIndex("d1")
+					: rookSrcSq == BoardUtil.getSquareAsIndex("h8") ? BoardUtil.getSquareAsIndex("f8")
+							: BoardUtil.getSquareAsIndex("d8");
 
 			bitboards[key] = BitUtil.popBit(bitboards[key], rookSrcSq);
 			bitboards[key] = BitUtil.setBit(bitboards[key], rookDstSq);
@@ -132,9 +118,8 @@ public class Position {
 		occupancies[Piece.BOTH] |= occupancies[Piece.BLACK];
 
 		turn = (turn == Piece.WHITE ? Piece.BLACK : Piece.WHITE);
-		int kingSq = turn == Piece.WHITE ?
-				BitUtil.getLS1BIndex(bitboards[PieceType.BKING.getKey()]) :
-				BitUtil.getLS1BIndex(bitboards[PieceType.WKING.getKey()]);
+		int kingSq = turn == Piece.WHITE ? BitUtil.getLS1BIndex(bitboards[PieceType.BKING.getKey()])
+				: BitUtil.getLS1BIndex(bitboards[PieceType.WKING.getKey()]);
 		if (Bitboard.isSquareAttacked(kingSq, turn, bitboards, occupancies)) {
 			// restores previous position if the king was in check or check was unresolved
 			unMakeMove(undoInfo);
@@ -145,10 +130,10 @@ public class Position {
 		}
 	}
 
-	public boolean makeMove(Move move, UndoInfo undoInfo, int moveFlag) {
+	public boolean makeMove(int move, UndoInfo undoInfo, int moveFlag) {
 		switch (moveFlag) {
 		case CAPTURES:
-			if (move.getCaptureFlag() != 0) {
+			if (Move.getCaptureFlag(move) != 0) {
 				return makeMove(move, undoInfo);
 			}
 			return false;
@@ -176,7 +161,7 @@ public class Position {
 
 		String castleAbility = fenFields[2];
 		this.castleRights = 0;
-		this.castleRights |= (castleAbility.contains("K") ? WHITE_KING_CASTLE : 0);
+		this.castleRights |= castleAbility.contains("K") ? WHITE_KING_CASTLE : 0;
 		this.castleRights |= castleAbility.contains("Q") ? WHITE_QUEEN_CASTLE : 0;
 		this.castleRights |= castleAbility.contains("q") ? BLACK_QUEEN_CASTLE : 0;
 		this.castleRights |= castleAbility.contains("k") ? BLACK_KING_CASTLE : 0;
@@ -298,10 +283,10 @@ public class Position {
 
 		System.out.println("     ep: " + (epSquare == -1 ? "-" : BoardUtil.getIndexAsSquare(epSquare)));
 
-		String castle = ((castleRights & WHITE_KING_CASTLE) != 0 ? "K" : "") +
-				((castleRights & WHITE_QUEEN_CASTLE) != 0 ? "Q" : "") +
-				((castleRights & BLACK_KING_CASTLE) != 0 ? "k" : "") +
-				((castleRights & BLACK_QUEEN_CASTLE) != 0 ? "q" : "");
+		String castle = ((castleRights & WHITE_KING_CASTLE) != 0 ? "K" : "")
+				+ ((castleRights & WHITE_QUEEN_CASTLE) != 0 ? "Q" : "")
+				+ ((castleRights & BLACK_KING_CASTLE) != 0 ? "k" : "")
+				+ ((castleRights & BLACK_QUEEN_CASTLE) != 0 ? "q" : "");
 		System.out.println("     castle: " + (castle.isEmpty() ? "-" : castle));
 	}
 
@@ -330,31 +315,11 @@ public class Position {
 
 		System.out.println("     ep: " + (epSquare == -1 ? "-" : BoardUtil.getIndexAsSquare(epSquare)));
 
-		String castle = ((castleRights & WHITE_KING_CASTLE) != 0 ? "K" : "") +
-				((castleRights & WHITE_QUEEN_CASTLE) != 0 ? "Q" : "") +
-				((castleRights & BLACK_KING_CASTLE) != 0 ? "k" : "") +
-				((castleRights & BLACK_QUEEN_CASTLE) != 0 ? "q" : "");
+		String castle = ((castleRights & WHITE_KING_CASTLE) != 0 ? "K" : "")
+				+ ((castleRights & WHITE_QUEEN_CASTLE) != 0 ? "Q" : "")
+				+ ((castleRights & BLACK_KING_CASTLE) != 0 ? "k" : "")
+				+ ((castleRights & BLACK_QUEEN_CASTLE) != 0 ? "q" : "");
 		System.out.println("     castle: " + (castle.isEmpty() ? "-" : castle));
-	}
-
-	public final static long perft(Position position, int depth) {
-		if (depth == 0)
-			return 1;
-		long nodes = 0;
-		MoveList moves = MoveGenerator.generateAllMoves(position);
-		if (depth == 1) {
-			return moves.moveCount;
-		}
-		UndoInfo ui = new UndoInfo();
-		for (int mi = 0; mi < moves.moveCount; mi++) {
-			Move m = moves.moves[mi];
-			if (!position.makeMove(m, ui)) {
-				continue;
-			}
-			nodes += perft(position, depth - 1);
-			position.unMakeMove(ui);
-		}
-		return nodes;
 	}
 
 	private String expandPiecePlacementString(String fenPiecePlacement) {
@@ -406,10 +371,10 @@ public class Position {
 		}
 		sb.append(" ");
 		sb.append(turn == Piece.WHITE ? "w " : "b ");
-		String castle = ((castleRights & WHITE_KING_CASTLE) != 0 ? "K" : "") +
-				((castleRights & WHITE_QUEEN_CASTLE) != 0 ? "Q" : "") +
-				((castleRights & BLACK_KING_CASTLE) != 0 ? "k" : "") +
-				((castleRights & BLACK_QUEEN_CASTLE) != 0 ? "q" : "");
+		String castle = ((castleRights & WHITE_KING_CASTLE) != 0 ? "K" : "")
+				+ ((castleRights & WHITE_QUEEN_CASTLE) != 0 ? "Q" : "")
+				+ ((castleRights & BLACK_KING_CASTLE) != 0 ? "k" : "")
+				+ ((castleRights & BLACK_QUEEN_CASTLE) != 0 ? "q" : "");
 		sb.append(castle.isEmpty() ? "- " : castle + " ");
 		sb.append(epSquare == -1 ? "- " : BoardUtil.getIndexAsSquare(epSquare) + " ");
 		sb.append(halfMoveClock);

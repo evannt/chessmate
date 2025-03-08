@@ -15,8 +15,8 @@ public class Searcher {
 
 	private static final int MAX_PLY = 64;
 
-	public static final int MVV_LVA[][] = {
-			{ 0, 000, 000, 000, 000, 000, 000, 000, 000, 000, 000, 000, 000 },
+	// Most Valuable Victim Least Valuable Attacker
+	public static final int MVV_LVA[][] = { { 000, 000, 000, 000, 000, 000, 000, 000, 000, 000, 000, 000 },
 			{ 0, 105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605 },
 			{ 0, 104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604 },
 			{ 0, 103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603 },
@@ -28,27 +28,26 @@ public class Searcher {
 			{ 0, 103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603 },
 			{ 0, 102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602 },
 			{ 0, 101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601 },
-			{ 0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600 }
-	};
+			{ 0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600 } };
 
 	private Position pos;
 
 	private int ply;
 	private int nodes;
 
-	private Move killerMoves[][];
+	private int killerMoves[][];
 	private int historyMoves[][];
 
 	private int pvLength[];
-	private Move pvTable[][];
+	private int pvTable[][];
 
 	public Searcher(Position pos) {
 		this.pos = pos;
 		nodes = 0;
-		killerMoves = new Move[2][64];
-		historyMoves = new int[PieceType.values().length][64];
+		killerMoves = new int[2][64];
+		historyMoves = new int[PieceType.values().length + 1][64];
 		pvLength = new int[MAX_PLY];
-		pvTable = new Move[MAX_PLY][MAX_PLY];
+		pvTable = new int[MAX_PLY][MAX_PLY];
 	}
 
 	public void setPosition(Position pos) {
@@ -57,17 +56,15 @@ public class Searcher {
 
 	public void search(int depth) {
 		iterativeDeepending(depth);
-		int score = negamax(-50000, 50000, depth);
-		System.out.println("Best move: " + pvTable[0][0].decodeMove() + " - " + score);
 	}
 
 	public void iterativeDeepending(int depth) {
 		int score = 0;
 		nodes = 0;
 
-		Arrays.stream(killerMoves).forEach(a -> Arrays.fill(a, null));
+		Arrays.stream(killerMoves).forEach(a -> Arrays.fill(a, 0));
 		Arrays.stream(historyMoves).forEach(a -> Arrays.fill(a, 0));
-		Arrays.stream(pvTable).forEach(a -> Arrays.fill(a, null));
+		Arrays.stream(pvTable).forEach(a -> Arrays.fill(a, 0));
 		Arrays.fill(pvLength, 0);
 
 		for (int d = 1; d <= depth; d++) {
@@ -75,23 +72,23 @@ public class Searcher {
 			score = negamax(-50000, 50000, d);
 			System.out.println("score: " + score + " depth: " + d + " nodes: " + nodes);
 			for (int c = 0; c < pvLength[0]; c++) {
-				System.out.println(pvTable[0][c].decodeMove());
+				System.out.println(Move.decodeMove(pvTable[0][c]));
 			}
 		}
-		System.out.println("Best move: " + pvTable[0][0].decodeMove());
+		System.out.println("Best move: " + Move.decodeMove(pvTable[0][0]));
 		nodes = 0;
 
-		Arrays.stream(killerMoves).forEach(a -> Arrays.fill(a, null));
+		Arrays.stream(killerMoves).forEach(a -> Arrays.fill(a, 0));
 		Arrays.stream(historyMoves).forEach(a -> Arrays.fill(a, 0));
-		Arrays.stream(pvTable).forEach(a -> Arrays.fill(a, null));
+		Arrays.stream(pvTable).forEach(a -> Arrays.fill(a, 0));
 		Arrays.fill(pvLength, 0);
 
 		score = negamax(-50000, 50000, depth);
 		System.out.println("score: " + score + " depth: " + depth + " nodes: " + nodes);
 		for (int c = 0; c < pvLength[0]; c++) {
-			System.out.println(pvTable[0][c].decodeMove());
+			System.out.println(Move.decodeMove(pvTable[0][c]));
 		}
-		System.out.println("Best move: " + pvTable[0][0].decodeMove());
+		System.out.println("Best move: " + Move.decodeMove(pvTable[0][0]));
 	}
 
 	public int negamax(int alpha, int beta, int depth) {
@@ -106,27 +103,23 @@ public class Searcher {
 		nodes++;
 
 		int legalMoves = 0;
-		boolean isKingInCheck = Bitboard.isSquareAttacked(pos.getTurn() == Piece.WHITE ?
-				BitUtil.getLS1BIndex(pos.getBitboards()[PieceType.WKING.getKey()]) :
-				BitUtil.getLS1BIndex(pos.getBitboards()[PieceType.BKING.getKey()]),
-				pos.getTurn() == Piece.WHITE ? Piece.BLACK : Piece.WHITE,
-				pos.getBitboards(),
-				pos.getOccupancies());
+		boolean isKingInCheck = Bitboard.isSquareAttacked(
+				pos.getTurn() == Piece.WHITE ? BitUtil.getLS1BIndex(pos.getBitboards()[PieceType.WKING.getKey()])
+						: BitUtil.getLS1BIndex(pos.getBitboards()[PieceType.BKING.getKey()]),
+				pos.getTurn() == Piece.WHITE ? Piece.BLACK : Piece.WHITE, pos.getBitboards(), pos.getOccupancies());
 
 		if (isKingInCheck) {
 			depth++;
 		}
 
-		Move move;
+		int move;
 		MoveList moveList = MoveGenerator.generateAllMoves(pos);
-//		moveList.sortMoves(pos);
 		sortMoves(moveList, pos);
 		UndoInfo undoInfo = new UndoInfo();
 
 		for (int c = 0; c < moveList.moveCount; c++) {
-			move = moveList.moves[c];
+			move = moveList.mvs[c];
 			if (!pos.makeMove(move, undoInfo, Position.ALL_MOVES)) {
-//				pos.unMakeMove(undoInfo);
 				continue;
 			}
 			legalMoves++;
@@ -137,7 +130,7 @@ public class Searcher {
 			ply--;
 
 			if (score >= beta) {
-				if (move.getCaptureFlag() == 0) {
+				if (Move.getCaptureFlag(move) == 0) {
 					killerMoves[1][ply] = killerMoves[0][ply];
 					killerMoves[0][ply] = move;
 				}
@@ -145,8 +138,8 @@ public class Searcher {
 				return beta; // move fails high
 			}
 			if (score > alpha) {
-				if (move.getCaptureFlag() == 0) {
-					historyMoves[move.getPiece()][move.getDst()] += depth;
+				if (Move.getCaptureFlag(move) == 0) {
+					historyMoves[Move.getPiece(move)][Move.getDst(move)] += depth;
 				}
 				alpha = score;
 				pvTable[ply][ply] = move;
@@ -165,7 +158,7 @@ public class Searcher {
 			}
 		}
 
-		return alpha;
+		return alpha; // move fails low
 	}
 
 	public int quiescence(int alpha, int beta) {
@@ -180,16 +173,14 @@ public class Searcher {
 			alpha = eval;
 		}
 
-		Move move;
+		int move;
 		MoveList moveList = MoveGenerator.generateAllMoves(pos);
-//		moveList.sortMoves(pos);
 		sortMoves(moveList, pos);
 		UndoInfo undoInfo = new UndoInfo();
 
 		for (int c = 0; c < moveList.moveCount; c++) {
-			move = moveList.moves[c];
+			move = moveList.mvs[c];
 			if (!pos.makeMove(move, undoInfo, Position.CAPTURES)) {
-//				pos.unMakeMove(undoInfo);
 				continue;
 			}
 
@@ -206,45 +197,49 @@ public class Searcher {
 			}
 		}
 
-		return alpha;
+		return alpha; // move fails low
 	}
 
-	public void scoreMove(Move move, Position pos) {
-		if (move.getCaptureFlag() != 0) {
+	public int scoreMove(int move, Position pos) {
+		if (Move.getCaptureFlag(move) != 0) {
 			int targetPiece = PieceType.WPAWN.getKey();
 
 			int start = pos.getTurn() == Piece.WHITE ? PieceType.BPAWN.getKey() : PieceType.WPAWN.getKey();
 			int end = pos.getTurn() == Piece.WHITE ? PieceType.BKING.getKey() : PieceType.WKING.getKey();
 			for (int key = start; key <= end; key++) {
-				if (BitUtil.getBit(pos.getBitboards()[key], move.getDst()) == 1) {
+				if (BitUtil.getBit(pos.getBitboards()[key], Move.getDst(move)) == 1) {
 					targetPiece = key;
 					break;
 				}
 			}
-			move.setScore(MVV_LVA[move.getPiece()][targetPiece] + 10000);
-//			return MVV_LVA[move.getPiece()][targetPiece];
+			return MVV_LVA[Move.getPiece(move)][targetPiece] + 10000;
 		} else {
-			if (killerMoves[0][ply] != null && killerMoves[0][ply].equals(move)) {
-				move.setScore(9000);
-			} else if (killerMoves[1][ply] != null && killerMoves[1][ply].equals(move)) {
-				move.setScore(8000);
+			if (killerMoves[0][ply] == move) {
+				return 9000;
+			} else if (killerMoves[1][ply] == move) {
+				return 8000;
 			} else {
-				move.setScore(historyMoves[move.getPiece()][move.getDst()]);
+				return historyMoves[Move.getPiece(move)][Move.getDst(move)];
 			}
 		}
 	}
 
 	public void sortMoves(MoveList moveList, Position pos) {
+		int[] scores = new int[moveList.moveCount];
 		for (int i = 0; i < moveList.moveCount; i++) {
-			scoreMove(moveList.moves[i], pos);
+			scores[i] = scoreMove(0, pos);
 		}
-//		Arrays.sort(moveList.moves, Comparator.nullsLast(Comparator.comparingInt(Move::getScore).reversed()));
+
 		for (int currMove = 0; currMove < moveList.moveCount; currMove++) {
 			for (int nextMove = currMove + 1; nextMove < moveList.moveCount; nextMove++) {
-				if (moveList.moves[currMove].getScore() < moveList.moves[nextMove].getScore()) {
-					Move tempMove = moveList.moves[currMove];
-					moveList.moves[currMove] = moveList.moves[nextMove];
-					moveList.moves[nextMove] = tempMove;
+				if (scores[currMove] < scores[nextMove]) {
+					int tempScore = scores[currMove];
+					scores[currMove] = scores[nextMove];
+					scores[nextMove] = tempScore;
+
+					int tempMove = moveList.mvs[currMove];
+					moveList.mvs[currMove] = moveList.mvs[nextMove];
+					moveList.mvs[nextMove] = tempMove;
 				}
 			}
 		}
