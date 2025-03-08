@@ -37,7 +37,8 @@ public class ChessBoardPainter {
 		position = new Position();
 		selectedSquare = -1;
 		activeSquare = -1;
-		position.setPosition(Position.START_POSITION);
+//		position.setPosition(Position.START_POSITION);
+		position.setPosition("rnbqkbnr/ppp1pppp/3p4/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq - 0 1");
 	}
 
 	public void setPosition(Position position) {
@@ -137,6 +138,7 @@ public class ChessBoardPainter {
 
 		// reset the piece location after moving
 		position.drawPieces();
+		System.out.println(position.getFenString());
 	}
 
 	public void mouseDragged(MouseEvent e) {
@@ -159,6 +161,7 @@ public class ChessBoardPainter {
 			p.setX((file + START_FILE) * TILE_SIZE);
 			p.setY((rank + START_RANK) * TILE_SIZE);
 		}
+		position.makeMove(0, null);
 		position.movePiece(from, to);
 	}
 
