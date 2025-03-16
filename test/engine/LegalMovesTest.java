@@ -110,49 +110,52 @@ class LegalMovesTest {
 //		}
 		long nodes = 0;
 		long currNodes = 0;
-
+//		long t0 = System.nanoTime();
+		UndoInfo ui = new UndoInfo();
 		for (int mi = 0; mi < moves.moveCount; mi++) {
 			int move = moves.mvs[mi];
-			UndoInfo ui = new UndoInfo();
+
 			if (!position.makeMove(move, ui)) {
 				continue;
 			}
 			currNodes = debugPerftAuxiliary(depth, currentDepth - 1);
 			nodes += currNodes;
 			String moveString = Move.decodeMove(move);
-			String errorMessage = moveString;
-			System.out.println(moveString + ": " + currNodes);
+			String errorMessage = "";// moveString;
+//			System.out.println(moveString + ": " + currNodes);
 			if (depth == currentDepth) {
-				System.out.println(position.getFenString());
+//				System.out.println(position.getFenString());
 				switch (depth) {
 				case 1:
-					errorMessage += " Expected " + perft1Results.get(moveString) + " nodes but was " + currNodes + " ";
+//					errorMessage += " Expected " + perft1Results.get(moveString) + " nodes but was " + currNodes + " ";
 					assertTrue(errorMessage, perft1Results.get(moveString) == currNodes);
 					break;
 				case 2:
-					errorMessage += " Expected " + perft2Results.get(moveString) + " nodes but was " + currNodes + " ";
+//					errorMessage += " Expected " + perft2Results.get(moveString) + " nodes but was " + currNodes + " ";
 					assertTrue(errorMessage, perft2Results.get(moveString) == currNodes);
 					break;
 				case 3:
-					errorMessage += " Expected " + perft3Results.get(moveString) + " nodes but was " + currNodes;
+//					errorMessage += " Expected " + perft3Results.get(moveString) + " nodes but was " + currNodes;
 					assertTrue(errorMessage, perft3Results.get(moveString) == currNodes);
 					break;
 				case 4:
-					errorMessage += " Expected " + perft4Results.get(moveString) + " nodes but was " + currNodes + " ";
+//					errorMessage += " Expected " + perft4Results.get(moveString) + " nodes but was " + currNodes + " ";
 					assertTrue(errorMessage, perft4Results.get(moveString) == currNodes);
 					break;
 				case 5:
-					errorMessage += " Expected " + perft5Results.get(moveString) + " nodes but was " + currNodes + " ";
+//					errorMessage += " Expected " + perft5Results.get(moveString) + " nodes but was " + currNodes + " ";
 					assertTrue(errorMessage, perft5Results.get(moveString) == currNodes);
 					break;
 				case 6:
-					errorMessage += " Expected " + perft6Results.get(moveString) + " nodes but was " + currNodes + " ";
+//					errorMessage += " Expected " + perft6Results.get(moveString) + " nodes but was " + currNodes + " ";
 					assertTrue(errorMessage, perft6Results.get(moveString) == currNodes);
 					break;
 				}
 			}
-			position.unMakeMove(ui);
+			position.unMakeMove(move, ui);
 		}
+//		long t1 = System.nanoTime();
+//		System.out.printf("perft(%d) = %d, t=%.6fs\n", currentDepth, nodes, (t1 - t0) * 1e-9);
 		return nodes;
 	}
 
@@ -161,11 +164,10 @@ class LegalMovesTest {
 		String fileName = PERFT_RESULTS_PATH + "perft-" + perftNum + "-results.txt";
 		List<String> lines = Files.readAllLines(Paths.get(fileName), Charset.defaultCharset());
 		for (String line : lines) {
-			if (line.isBlank()) {
-				continue;
+			if (!line.isBlank()) {
+				String[] mapVals = line.split(": ");
+				perftResults.put(mapVals[0], Integer.valueOf(mapVals[1]));
 			}
-			String[] mapVals = line.split(": ");
-			perftResults.put(mapVals[0], Integer.valueOf(mapVals[1]));
 		}
 		return perftResults;
 	}

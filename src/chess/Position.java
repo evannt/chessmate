@@ -47,6 +47,7 @@ public class Position {
 	}
 
 	public boolean makeMove(int move, UndoInfo undoInfo) {
+		// TODO Replace reassignments with instance methods
 		undoInfo.updateInfo(this);
 
 		int src = Move.getSrc(move);
@@ -67,6 +68,7 @@ public class Position {
 			for (int key = start; key <= end; key++) {
 				if (BitUtil.getBit(bitboards[key], dst) == 1) {
 					bitboards[key] = BitUtil.popBit(bitboards[key], dst);
+					undoInfo.capturedPiece = key;
 					break;
 				}
 			}
@@ -105,29 +107,23 @@ public class Position {
 		castleRights &= CASTLE_RIGHTS_UPDATES[src];
 		castleRights &= CASTLE_RIGHTS_UPDATES[dst];
 
-		occupancies[Piece.WHITE] = 0l;
-		occupancies[Piece.BLACK] = 0l;
-		occupancies[Piece.BOTH] = 0l;
-		for (PieceType p : PieceType.values()) {
-			if (p == PieceType.NONE) {
-				continue;
-			}
-			occupancies[p.isWhite() ? Piece.WHITE : Piece.BLACK] |= bitboards[p.getKey()];
-		}
-		occupancies[Piece.BOTH] |= occupancies[Piece.WHITE];
-		occupancies[Piece.BOTH] |= occupancies[Piece.BLACK];
-
+		updateOccupancies();
+		long s = System.nanoTime();
 		turn = (turn == Piece.WHITE ? Piece.BLACK : Piece.WHITE);
 		int kingSq = turn == Piece.WHITE ? BitUtil.getLS1BIndex(bitboards[PieceType.BKING.getKey()])
 				: BitUtil.getLS1BIndex(bitboards[PieceType.WKING.getKey()]);
 		if (Bitboard.isSquareAttacked(kingSq, turn, bitboards, occupancies)) {
 			// restores previous position if the king was in check or check was unresolved
-			unMakeMove(undoInfo);
+			unMakeMove(move, undoInfo);
 			return false;
-		} else {
-//			movePiece(src, dst);
-			return true;
 		}
+
+		long e = System.nanoTime();
+
+		System.out.printf("Make Move t=%.6fs\n", (e - s) * 1e-9);
+//			movePiece(src, dst);
+		return true;
+
 	}
 
 	public boolean makeMove(int move, UndoInfo undoInfo, int moveFlag) {
@@ -144,17 +140,68 @@ public class Position {
 		}
 	}
 
-	public void unMakeMove(UndoInfo undoInfo) {
-		this.bitboards = undoInfo.bitboards;
-		this.occupancies = undoInfo.occupancies;
-		this.pieces = undoInfo.pieces;
+	public void unMakeMove(int move, UndoInfo undoInfo) {
 		this.turn = undoInfo.turn;
 		this.epSquare = undoInfo.epSquare;
 		this.castleRights = undoInfo.castleRights;
-//		setPieces(bitboards);
+//		this.bitboards = undoInfo.bitboards;
+//		this.occupancies = undoInfo.occupancies;
+//		this.pieces = undoInfo.pieces;
+		int src = Move.getSrc(move);
+		int dst = Move.getDst(move);
+		long srcMask = 1L << src;
+		long dstMask = 1L << dst;
+		int pieceType = Move.getPiece(move);
+		int pieceCaptured = undoInfo.capturedPiece;
+		// Put the captured piece at the destination
+		bitboards[pieceCaptured] &= ~srcMask;
+		bitboards[pieceCaptured] |= dstMask;
+
+		// Put the moved piece at the source
+		bitboards[pieceType] &= ~dstMask;
+		bitboards[pieceType] |= srcMask;
+
+		if (Move.getCastleFlag(move) != 0) {
+			// Undo castle move
+
+			long rookSrcMask = 0;
+			long rookDstMask = 0;
+			if (src + 2 == dst) { // King side O-
+				rookSrcMask = 1L << (src + 1);
+				rookDstMask = 1L << (src + 3);
+			} else if (src - 2 == dst) { // Queen side O-O-O
+				rookSrcMask = 1L << (src - 1);
+				rookDstMask = 1L << (src - 4);
+			}
+			int rook = turn == Piece.WHITE ? PieceType.WROOK.getKey() : PieceType.BROOK.getKey();
+			bitboards[rook] &= ~rookSrcMask;
+			bitboards[rook] |= rookDstMask;
+		}
+
+		if (Move.getEnPassantFlag(move) != 0) {
+			// Undo en-passant move
+			if (turn == Piece.WHITE) {
+				bitboards[PieceType.BPAWN.getKey()] &= ~(1L << (dst - 8));
+				bitboards[PieceType.BPAWN.getKey()] |= (1L << (dst - 8));
+			} else {
+				bitboards[PieceType.WPAWN.getKey()] &= ~(1L << (dst + 8));
+				bitboards[PieceType.WPAWN.getKey()] |= (1L << (dst + 8));
+			}
+		}
+
+		if (Move.getPromotedPiece(move) != 0) {
+			// Undo pawn promotion
+		}
+
+		updateOccupancies();
+
+//		if (turn == Piece.WHITE) {
+//			halfMoveClock--;
+//		}
 	}
 
 	public void setPosition(String fenString) {
+		// TODO Add regex to match FEN
 		String[] fenFields = fenString.split(" ");
 		String piecePlacement = expandPiecePlacementString(fenFields[0]);
 		this.turn = fenFields[1].equals("w") ? Piece.WHITE : Piece.BLACK;
@@ -197,6 +244,20 @@ public class Position {
 		}
 	}
 
+	public void updateOccupancies() {
+		occupancies[Piece.WHITE] = 0l;
+		occupancies[Piece.BLACK] = 0l;
+		occupancies[Piece.BOTH] = 0l;
+		for (PieceType p : PieceType.values()) {
+			if (p == PieceType.NONE) {
+				continue;
+			}
+			occupancies[p.isWhite() ? Piece.WHITE : Piece.BLACK] |= bitboards[p.getKey()];
+		}
+		occupancies[Piece.BOTH] |= occupancies[Piece.WHITE];
+		occupancies[Piece.BOTH] |= occupancies[Piece.BLACK];
+	}
+
 	public Piece getPiece(int square) {
 		return pieces[square];
 	}
@@ -211,6 +272,10 @@ public class Position {
 		pieces[from] = null;
 	}
 
+	public void setPiece(int piece, int sq) {
+
+	}
+
 	public int getTurn() {
 		return turn;
 	}
@@ -219,8 +284,16 @@ public class Position {
 		return epSquare;
 	}
 
+	public void setEpSquare(int epSquare) {
+		this.epSquare = epSquare;
+	}
+
 	public int getCastleRights() {
 		return castleRights;
+	}
+
+	public void setCastleRights(int castleRights) {
+		this.castleRights = castleRights;
 	}
 
 	public int getHalfMoveClock() {

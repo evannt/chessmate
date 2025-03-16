@@ -16,7 +16,7 @@ public class Main {
 		Position position = new Position();
 		position.setPosition("rnbqkbnr/ppp1pppp/3p4/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq - 0 1");
 
-		boolean debug = true;
+		boolean debug = false;
 
 		if (debug) {
 			debugPosition(position);
@@ -52,7 +52,7 @@ public class Main {
 			System.out.println(position.getFenString());
 
 			sc.nextLine();
-			position.unMakeMove(ui);
+			position.unMakeMove(move, ui);
 			position.drawBoard();
 			System.out.println(Evaluator.evaluate(position));
 		}
