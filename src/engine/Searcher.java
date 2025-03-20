@@ -126,7 +126,7 @@ public class Searcher {
 
 			ply++;
 			int score = -negamax(-beta, -alpha, depth - 1);
-			pos.unMakeMove(undoInfo);
+			pos.unMakeMove(move, undoInfo);
 			ply--;
 
 			if (score >= beta) {
@@ -186,7 +186,7 @@ public class Searcher {
 
 			ply++;
 			int score = -quiescence(-beta, -alpha);
-			pos.unMakeMove(undoInfo);
+			pos.unMakeMove(move, undoInfo);
 			ply--;
 
 			if (score >= beta) {

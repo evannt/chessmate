@@ -2,7 +2,7 @@ package util;
 
 public final class RandomUtil {
 
-	private static int random_state = 1804289383;
+	private static int random_state = 1804289382;
 
 	public static int getRandom32BitNumber() {
 		int num = random_state;
