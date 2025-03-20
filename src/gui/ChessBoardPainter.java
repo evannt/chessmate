@@ -38,7 +38,9 @@ public class ChessBoardPainter {
 		selectedSquare = -1;
 		activeSquare = -1;
 //		position.setPosition(Position.START_POSITION);
-		position.setPosition("rnbqkbnr/pppppppp/8/8/4Pp2/8/PPPP1PPP/RBNQKBNR w KQkq - 0 1");
+//		position.setPosition("rnbqkbnr/pppppppp/8/8/4Pp2/8/PPPP1PPP/RBNQKBNR w KQkq - 0 1");
+//		position.setPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R3KBNR w KQkq - 0 1");
+		position.setPosition(Position.TRICKY_POSITION);
 	}
 
 	public void setPosition(Position position) {

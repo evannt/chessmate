@@ -13,7 +13,7 @@ public class UndoInfo {
 //		this.occupancies = position.getOccupancies().clone();
 //		this.occupancies = Arrays.copyOf(position.getOccupancies(), position.getOccupancies().length);
 //		this.pieces = position.getPieces().clone(); // TODO Consider alternative to clone
-
+		this.capturedPiece = PieceType.NONE.getKey();
 		this.turn = position.getTurn();
 		this.epSquare = position.getEpSquare();
 		this.castleRights = position.getCastleRights();

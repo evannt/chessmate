@@ -5,6 +5,8 @@ import util.RandomUtil;
 
 public class Bitboard {
 
+	// TODO Optimize initilization
+
 	public static final long NOT_A_FILE = 0xFEFEFEFEFEFEFEFEL;
 	public static final long NOT_H_FILE = 0x7F7F7F7F7F7F7F7FL;
 	public static final long NOT_HG_FILE = 0x3F3F3F3F3F3F3F3FL;
@@ -66,14 +68,14 @@ public class Bitboard {
 			0x88402000100901L, 0x200081000210055L, 0x102002008100402L, 0x201a000408011082L, 0x1000589008010204L,
 			0x80a518621004c02L, };
 
-	private static long[] bishopMasks;
-	private static long[] rookMasks;
+	private static final long[] bishopMasks;
+	private static final long[] rookMasks;
 
-	private static long[][] pawnAttacks;
-	private static long[] knightAttacks;
-	private static long[][] bishopAttacks;
-	private static long[][] rookAttacks;
-	private static long[] kingAttacks;
+	private static final long[][] pawnAttacks;
+	private static final long[] knightAttacks;
+	public static final long[][] bishopAttacks;
+	private static final long[][] rookAttacks;
+	private static final long[] kingAttacks;
 
 	static {
 		bishopMasks = new long[64];
@@ -101,7 +103,7 @@ public class Bitboard {
 //		generateAttacks();
 //	}
 
-	private static void generateAttacks() {
+	private static final void generateAttacks() {
 		for (int sq = 0; sq < 64; sq++) {
 			pawnAttacks[Piece.WHITE][sq] = maskPawnAttacks(Piece.WHITE, sq);
 			pawnAttacks[Piece.BLACK][sq] = maskPawnAttacks(Piece.BLACK, sq);
@@ -135,78 +137,43 @@ public class Bitboard {
 	}
 
 	public static boolean isSquareAttacked(int square, int turn, long[] bitboards, long[] occupancies) {
-		// TODO Optimize
-		if (turn == Piece.WHITE && (pawnAttacks[Piece.BLACK][square] & bitboards[PieceType.WPAWN.getKey()]) != 0) {
-			return true;
-		}
-		if (turn == Piece.BLACK && (pawnAttacks[Piece.WHITE][square] & bitboards[PieceType.BPAWN.getKey()]) != 0) {
-			return true;
-		}
-		if ((knightAttacks[square] & (turn == Piece.WHITE ? bitboards[PieceType.WKNIGHT.getKey()]
-				: bitboards[PieceType.BKNIGHT.getKey()])) != 0) {
-			return true;
-		}
-		if ((getBishopAttacks(square, occupancies[Piece.BOTH])
-				& (turn == Piece.WHITE ? bitboards[PieceType.WBISHOP.getKey()]
-						: bitboards[PieceType.BBISHOP.getKey()])) != 0) {
-			return true;
-		}
-		if ((getRookAttacks(square, occupancies[Piece.BOTH])
-				& (turn == Piece.WHITE ? bitboards[PieceType.WROOK.getKey()]
-						: bitboards[PieceType.BROOK.getKey()])) != 0) {
-			return true;
-		}
-		if ((getQueenAttacks(square, occupancies[Piece.BOTH])
-				& (turn == Piece.WHITE ? bitboards[PieceType.WQUEEN.getKey()]
-						: bitboards[PieceType.BQUEEN.getKey()])) != 0) {
-			return true;
-		}
-		if ((getKingAttacks(square) & (turn == Piece.WHITE ? bitboards[PieceType.WKING.getKey()]
-				: bitboards[PieceType.BKING.getKey()])) != 0) {
-			return true;
-		}
-		return false;
-	}
-
-	public static boolean isSquareAttacked(Position position, int square) {
-		if (position.getTurn() == Piece.WHITE) {
-			if ((knightAttacks[square] & position.getBitboards()[PieceType.BKNIGHT.getKey()]) != 0) {
+		// TODO Optimize further
+		if (turn == Piece.WHITE) {
+			if ((getKnightAttacks(square) & bitboards[PieceType.WKNIGHT.getKey()]) != 0) {
 				return true;
 			}
-			if ((kingAttacks[square] & position.getBitboards()[PieceType.BKING.getKey()]) != 0) {
+			if ((getKingAttacks(square) & bitboards[PieceType.WKING.getKey()]) != 0) {
 				return true;
 			}
-			if ((pawnAttacks[Piece.WHITE][square] & position.getBitboards()[PieceType.BPAWN.getKey()]) != 0) {
+			if ((getPawnAttacks(Piece.BLACK, square) & bitboards[PieceType.WPAWN.getKey()]) != 0) {
 				return true;
 			}
-			long occupancies = position.getOccupancies()[Piece.BOTH];
-			long queenOccupancies = position.getBitboards()[Piece.BLACK];
-			long bishopAttacks = getBishopAttacks(square, occupancies);
-			if ((bishopAttacks & (position.getBitboards()[PieceType.BBISHOP.getKey()] | queenOccupancies)) != 0) {
+			if ((getBishopAttacks(square, occupancies[Piece.BOTH]) & bitboards[PieceType.WBISHOP.getKey()]) != 0) {
 				return true;
 			}
-			long rookAttacks = getRookAttacks(square, occupancies);
-			if ((rookAttacks & (position.getBitboards()[PieceType.BROOK.getKey()] | queenOccupancies)) != 0) {
+			if ((getRookAttacks(square, occupancies[Piece.BOTH]) & bitboards[PieceType.WROOK.getKey()]) != 0) {
+				return true;
+			}
+			if ((getQueenAttacks(square, occupancies[Piece.BOTH]) & bitboards[PieceType.WQUEEN.getKey()]) != 0) {
 				return true;
 			}
 		} else {
-			if ((knightAttacks[square] & position.getBitboards()[PieceType.WKNIGHT.getKey()]) != 0) {
+			if ((getKnightAttacks(square) & bitboards[PieceType.BKNIGHT.getKey()]) != 0) {
 				return true;
 			}
-			if ((kingAttacks[square] & position.getBitboards()[PieceType.WKING.getKey()]) != 0) {
+			if ((getKingAttacks(square) & bitboards[PieceType.BKING.getKey()]) != 0) {
 				return true;
 			}
-			if ((pawnAttacks[Piece.WHITE][square] & position.getBitboards()[PieceType.WPAWN.getKey()]) != 0) {
+			if ((getPawnAttacks(Piece.WHITE, square) & bitboards[PieceType.BPAWN.getKey()]) != 0) {
 				return true;
 			}
-			long occupancies = position.getOccupancies()[Piece.BOTH];
-			long queenOccupancies = position.getBitboards()[Piece.WHITE];
-			long bishopAttacks = getBishopAttacks(square, occupancies);
-			if ((bishopAttacks & (position.getBitboards()[PieceType.WBISHOP.getKey()] | queenOccupancies)) != 0) {
+			if ((getBishopAttacks(square, occupancies[Piece.BOTH]) & bitboards[PieceType.BBISHOP.getKey()]) != 0) {
 				return true;
 			}
-			long rookAttacks = getRookAttacks(square, occupancies);
-			if ((rookAttacks & (position.getBitboards()[PieceType.WROOK.getKey()] | queenOccupancies)) != 0) {
+			if ((getRookAttacks(square, occupancies[Piece.BOTH]) & bitboards[PieceType.BROOK.getKey()]) != 0) {
+				return true;
+			}
+			if ((getQueenAttacks(square, occupancies[Piece.BOTH]) & bitboards[PieceType.BQUEEN.getKey()]) != 0) {
 				return true;
 			}
 		}
@@ -239,11 +206,11 @@ public class Bitboard {
 		return getBishopAttacks(square, occupancy) | getRookAttacks(square, occupancy);
 	}
 
-	public static long getKingAttacks(int square) {
+	public static final long getKingAttacks(int square) {
 		return kingAttacks[square];
 	}
 
-	private static long maskPawnAttacks(int turn, int square) { // TODO
+	private static final long maskPawnAttacks(int turn, int square) {
 		long attacks = 0L;
 		long bitboard = BitUtil.setBit(0L, square);
 
@@ -267,7 +234,7 @@ public class Bitboard {
 //		return ((bitboard << 7) & NOT_H_FILE) | ((bitboard << 9) & NOT_A_FILE);
 	}
 
-	private static long maskKnightAttacks(int square) {
+	private static final long maskKnightAttacks(int square) {
 		long attacks = 0L;
 		long bitboard = BitUtil.setBit(0L, square);
 
@@ -302,7 +269,7 @@ public class Bitboard {
 //				(((bitboard << 10) | (bitboard >>> 6)) & NOT_AB_FILE);
 	}
 
-	private static long maskKingAttacks(int square) {
+	private static final long maskKingAttacks(int square) {
 		long attacks = 0L;
 		long bitboard = BitUtil.setBit(0L, square);
 
@@ -336,7 +303,7 @@ public class Bitboard {
 //				(((bitboard >>> 1) | (bitboard << 7) | (bitboard >>> 9)) & NOT_H_FILE);
 	}
 
-	private static long maskBishopAttacks(int square) {
+	private static final long maskBishopAttacks(int square) {
 		long attacks = 0L;
 		int tr = square / 8;
 		int tf = square % 8;
@@ -356,7 +323,7 @@ public class Bitboard {
 		return attacks;
 	}
 
-	private static long maskBishopAttacks(int square, long blocks) {
+	private static final long maskBishopAttacks(int square, long blocks) {
 		long attacks = 0L;
 		int tr = square / 8;
 		int tf = square % 8;
@@ -412,7 +379,7 @@ public class Bitboard {
 		return attacks;
 	}
 
-	private static long maskRookAttacks(int square, long blocks) {
+	private static final long maskRookAttacks(int square, long blocks) {
 		long attacks = 0L;
 		int tr = square / 8;
 		int tf = square % 8;
@@ -448,7 +415,7 @@ public class Bitboard {
 		return attacks;
 	}
 
-	private static long setOccupancy(int index, int numMaskBits, long attackMask) {
+	private static final long setOccupancy(int index, int numMaskBits, long attackMask) {
 		long occupancy = 0L;
 
 		for (int i = 0; i < numMaskBits; i++) {
@@ -463,7 +430,7 @@ public class Bitboard {
 		return occupancy;
 	}
 
-	private static long getMagicNumber(int square, int relevantBits, boolean bishop) {
+	private static final long getMagicNumber(int square, int relevantBits, boolean bishop) {
 		long[] occupancies = new long[4096];
 		long[] attacks = new long[4096];
 		long[] usedAttacks = new long[4096];
@@ -521,7 +488,7 @@ public class Bitboard {
 		System.out.println("};");
 	}
 
-	public static void drawBitboard(long bitboard) {
+	public static final void drawBitboard(long bitboard) {
 		System.out.println();
 		for (int rank = 0; rank < 8; rank++) {
 			for (int file = 0; file < 8; file++) {

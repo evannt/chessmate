@@ -21,20 +21,12 @@ class UndoInfoTest {
 		int piece = Move.getPiece(move);
 
 		UndoInfo ui = new UndoInfo();
-		long t0 = System.nanoTime();
 		position.makeMove(move, ui);
-		long t1 = System.nanoTime();
-
-		System.out.printf("t=%.6fs\n", (t1 - t0) * 1e-9);
 
 		assertEquals(0, BitUtil.getBit(position.getBitboards()[piece], e2));
 		assertEquals(1, BitUtil.getBit(position.getBitboards()[piece], e4));
 
-		long t2 = System.nanoTime();
 		position.unMakeMove(move, ui);
-		long t3 = System.nanoTime();
-
-		System.out.printf("t=%.6fs\n", (t3 - t2) * 1e-9);
 
 		assertEquals(Piece.WHITE, position.getTurn());
 
@@ -113,13 +105,13 @@ class UndoInfoTest {
 	@Test
 	public void testUnMakeEnPassantMove() {
 		Position position = new Position();
-		position.setPosition("rnbqkbnr/pppp1ppp/8/8/4Pp2/8/PPPP1PPP/RBNQKBNR w KQkq - 0 1");
+		position.setPosition("rnbqkbnr/pppp1ppp/8/8/4Pp2/8/PPPP1PPP/RBNQKBNR w KQkq f4 0 1");
 
 		int e4 = BoardUtil.getSquareAsIndex("e4");
 		int f5 = BoardUtil.getSquareAsIndex("f5");
 		int f4 = BoardUtil.getSquareAsIndex("f4");
 
-		int move = Move.encodeMove(e4, f5, PieceType.WPAWN.getKey(), 0, 0, 0, 1, 0);
+		int move = Move.encodeMove(e4, f5, PieceType.WPAWN.getKey(), 0, 1, 0, 1, 0);
 		int piece = Move.getPiece(move);
 
 		UndoInfo ui = new UndoInfo();
@@ -134,6 +126,33 @@ class UndoInfoTest {
 		assertEquals(1, BitUtil.getBit(position.getBitboards()[piece], e4));
 		assertEquals(0, BitUtil.getBit(position.getBitboards()[piece], f5));
 		assertEquals(1, BitUtil.getBit(position.getBitboards()[PieceType.BPAWN.getKey()], f4));
+	}
+
+	@Test
+	public void testUnMakePawnPromotiontMove() {
+		Position position = new Position();
+		position.setPosition("5pk1/4P3/8/8/8/8/8/4K3 w - - 0 1");
+
+		int e7 = BoardUtil.getSquareAsIndex("e7");
+		int f8 = BoardUtil.getSquareAsIndex("f8");
+
+		int move = Move.encodeMove(e7, f8, PieceType.WPAWN.getKey(), PieceType.WQUEEN.getKey(), 1, 0, 0, 0);
+		int piece = Move.getPiece(move);
+
+		UndoInfo ui = new UndoInfo();
+		position.makeMove(move, ui);
+
+		assertEquals(0, BitUtil.getBit(position.getBitboards()[piece], e7));
+		assertEquals(0, BitUtil.getBit(position.getBitboards()[piece], f8));
+		assertEquals(1, BitUtil.getBit(position.getBitboards()[PieceType.WQUEEN.getKey()], f8));
+		assertEquals(0, BitUtil.getBit(position.getBitboards()[PieceType.BPAWN.getKey()], f8));
+
+		position.unMakeMove(move, ui);
+
+		assertEquals(1, BitUtil.getBit(position.getBitboards()[piece], e7));
+		assertEquals(0, BitUtil.getBit(position.getBitboards()[piece], f8));
+		assertEquals(0, BitUtil.getBit(position.getBitboards()[PieceType.WQUEEN.getKey()], f8));
+		assertEquals(1, BitUtil.getBit(position.getBitboards()[PieceType.BPAWN.getKey()], f8));
 	}
 
 }

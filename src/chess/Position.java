@@ -90,16 +90,20 @@ public class Position {
 		}
 		if (castleFlag != 0) {
 			int key = turn == Piece.WHITE ? PieceType.WROOK.getKey() : PieceType.BROOK.getKey();
-			int rookSrcSq = turn == Piece.WHITE
-					? dst == BoardUtil.getSquareAsIndex("g1") ? BoardUtil.getSquareAsIndex("h1")
-							: BoardUtil.getSquareAsIndex("a1")
-					: dst == BoardUtil.getSquareAsIndex("g8") ? BoardUtil.getSquareAsIndex("h8")
-							: BoardUtil.getSquareAsIndex("a8");
-			int rookDstSq = turn == Piece.WHITE
-					? rookSrcSq == BoardUtil.getSquareAsIndex("h1") ? BoardUtil.getSquareAsIndex("f1")
-							: BoardUtil.getSquareAsIndex("d1")
-					: rookSrcSq == BoardUtil.getSquareAsIndex("h8") ? BoardUtil.getSquareAsIndex("f8")
-							: BoardUtil.getSquareAsIndex("d8");
+			int rookSrcSq = turn == Piece.WHITE ?
+					dst == BoardUtil.getSquareAsIndex("g1") ?
+							BoardUtil.getSquareAsIndex("h1") :
+							BoardUtil.getSquareAsIndex("a1") :
+					dst == BoardUtil.getSquareAsIndex("g8") ?
+							BoardUtil.getSquareAsIndex("h8") :
+							BoardUtil.getSquareAsIndex("a8");
+			int rookDstSq = turn == Piece.WHITE ?
+					rookSrcSq == BoardUtil.getSquareAsIndex("h1") ?
+							BoardUtil.getSquareAsIndex("f1") :
+							BoardUtil.getSquareAsIndex("d1") :
+					rookSrcSq == BoardUtil.getSquareAsIndex("h8") ?
+							BoardUtil.getSquareAsIndex("f8") :
+							BoardUtil.getSquareAsIndex("d8");
 
 			bitboards[key] = BitUtil.popBit(bitboards[key], rookSrcSq);
 			bitboards[key] = BitUtil.setBit(bitboards[key], rookDstSq);
@@ -108,19 +112,16 @@ public class Position {
 		castleRights &= CASTLE_RIGHTS_UPDATES[dst];
 
 		updateOccupancies();
-		long s = System.nanoTime();
 		turn = (turn == Piece.WHITE ? Piece.BLACK : Piece.WHITE);
-		int kingSq = turn == Piece.WHITE ? BitUtil.getLS1BIndex(bitboards[PieceType.BKING.getKey()])
-				: BitUtil.getLS1BIndex(bitboards[PieceType.WKING.getKey()]);
+		int kingSq = turn == Piece.WHITE ?
+				BitUtil.getLS1BIndex(bitboards[PieceType.BKING.getKey()]) :
+				BitUtil.getLS1BIndex(bitboards[PieceType.WKING.getKey()]);
 		if (Bitboard.isSquareAttacked(kingSq, turn, bitboards, occupancies)) {
 			// restores previous position if the king was in check or check was unresolved
 			unMakeMove(move, undoInfo);
 			return false;
 		}
 
-		long e = System.nanoTime();
-
-		System.out.printf("Make Move t=%.6fs\n", (e - s) * 1e-9);
 //			movePiece(src, dst);
 		return true;
 
@@ -141,6 +142,7 @@ public class Position {
 	}
 
 	public void unMakeMove(int move, UndoInfo undoInfo) {
+
 		this.turn = undoInfo.turn;
 		this.epSquare = undoInfo.epSquare;
 		this.castleRights = undoInfo.castleRights;
@@ -163,10 +165,9 @@ public class Position {
 
 		if (Move.getCastleFlag(move) != 0) {
 			// Undo castle move
-
 			long rookSrcMask = 0;
 			long rookDstMask = 0;
-			if (src + 2 == dst) { // King side O-
+			if (src + 2 == dst) { // King side O-O
 				rookSrcMask = 1L << (src + 1);
 				rookDstMask = 1L << (src + 3);
 			} else if (src - 2 == dst) { // Queen side O-O-O
@@ -181,16 +182,15 @@ public class Position {
 		if (Move.getEnPassantFlag(move) != 0) {
 			// Undo en-passant move
 			if (turn == Piece.WHITE) {
-				bitboards[PieceType.BPAWN.getKey()] &= ~(1L << (dst - 8));
-				bitboards[PieceType.BPAWN.getKey()] |= (1L << (dst - 8));
+				bitboards[PieceType.BPAWN.getKey()] |= (1L << (dst + 8));
 			} else {
-				bitboards[PieceType.WPAWN.getKey()] &= ~(1L << (dst + 8));
-				bitboards[PieceType.WPAWN.getKey()] |= (1L << (dst + 8));
+				bitboards[PieceType.WPAWN.getKey()] |= (1L << (dst - 8));
 			}
 		}
 
 		if (Move.getPromotedPiece(move) != 0) {
 			// Undo pawn promotion
+			bitboards[Move.getPromotedPiece(move)] &= ~(1L << dst);
 		}
 
 		updateOccupancies();

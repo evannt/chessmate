@@ -14,16 +14,13 @@ public class Main {
 
 	public static void main(String[] args) {
 		Position position = new Position();
-		position.setPosition("rnbqkbnr/ppp1pppp/3p4/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq - 0 1");
+		position.setPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R3KBNR w KQkq - 0 1");
 
 		boolean debug = false;
 
 		if (debug) {
 			debugPosition(position);
 		}
-//		position.setPosition(Position.POSITION_2);
-//		position.setPosition("8/8/3Pp3/8/8/8/8/8 w - e7 0 1");
-//		position.drawPieces();
 
 		new ChessFrame(); // display game screen
 
@@ -32,7 +29,7 @@ public class Main {
 	private static void debugPosition(Position position) {
 		Scanner sc = new Scanner(System.in);
 
-		position.setPosition("rnbqkbnr/ppp1pppp/3p4/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq - 0 1");
+		position.setPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R3KBNR w KQkq - 0 1");
 		position.drawBoard();
 		System.out.println(Evaluator.evaluate(position));
 		Searcher searcher = new Searcher(position);
