@@ -31,6 +31,7 @@ public class Position {
 	// Used to draw the pieces on the chess board
 	private Piece[] pieces;
 
+	// Used to handle move operations
 	private long[] bitboards;
 	private long[] occupancies;
 
@@ -61,6 +62,7 @@ public class Position {
 
 		bitboards[piece] = BitUtil.popBit(bitboards[piece], src);
 		bitboards[piece] = BitUtil.setBit(bitboards[piece], dst);
+		movePiece(src, dst);
 
 		if (captureFlag != 0) {
 			int start = turn == Piece.WHITE ? PieceType.BPAWN.getKey() : PieceType.WPAWN.getKey();
@@ -77,10 +79,12 @@ public class Position {
 			int key = turn == Piece.WHITE ? PieceType.WPAWN.getKey() : PieceType.BPAWN.getKey();
 			bitboards[key] = BitUtil.popBit(bitboards[key], dst);
 			bitboards[promotedPiece] = BitUtil.setBit(bitboards[promotedPiece], dst);
+			promotePiece(dst, PieceType.valueOfKey(promotedPiece));
 		}
 		if (enPassantFlag != 0) {
 			int key = turn == Piece.WHITE ? PieceType.BPAWN.getKey() : PieceType.WPAWN.getKey();
 			bitboards[key] = BitUtil.popBit(bitboards[key], turn == Piece.WHITE ? dst + 8 : dst - 8);
+			removePiece(turn == Piece.WHITE ? dst + 8 : dst - 8);
 		}
 
 		epSquare = -1;
@@ -90,41 +94,36 @@ public class Position {
 		}
 		if (castleFlag != 0) {
 			int key = turn == Piece.WHITE ? PieceType.WROOK.getKey() : PieceType.BROOK.getKey();
-			int rookSrcSq = turn == Piece.WHITE ?
-					dst == BoardUtil.getSquareAsIndex("g1") ?
-							BoardUtil.getSquareAsIndex("h1") :
-							BoardUtil.getSquareAsIndex("a1") :
-					dst == BoardUtil.getSquareAsIndex("g8") ?
-							BoardUtil.getSquareAsIndex("h8") :
-							BoardUtil.getSquareAsIndex("a8");
-			int rookDstSq = turn == Piece.WHITE ?
-					rookSrcSq == BoardUtil.getSquareAsIndex("h1") ?
-							BoardUtil.getSquareAsIndex("f1") :
-							BoardUtil.getSquareAsIndex("d1") :
-					rookSrcSq == BoardUtil.getSquareAsIndex("h8") ?
-							BoardUtil.getSquareAsIndex("f8") :
-							BoardUtil.getSquareAsIndex("d8");
+			int rookSrcSq = turn == Piece.WHITE
+					? dst == BoardUtil.getSquareAsIndex("g1") ? BoardUtil.getSquareAsIndex("h1")
+							: BoardUtil.getSquareAsIndex("a1")
+					: dst == BoardUtil.getSquareAsIndex("g8") ? BoardUtil.getSquareAsIndex("h8")
+							: BoardUtil.getSquareAsIndex("a8");
+			int rookDstSq = turn == Piece.WHITE
+					? rookSrcSq == BoardUtil.getSquareAsIndex("h1") ? BoardUtil.getSquareAsIndex("f1")
+							: BoardUtil.getSquareAsIndex("d1")
+					: rookSrcSq == BoardUtil.getSquareAsIndex("h8") ? BoardUtil.getSquareAsIndex("f8")
+							: BoardUtil.getSquareAsIndex("d8");
 
 			bitboards[key] = BitUtil.popBit(bitboards[key], rookSrcSq);
 			bitboards[key] = BitUtil.setBit(bitboards[key], rookDstSq);
+			movePiece(rookSrcSq, rookDstSq);
 		}
 		castleRights &= CASTLE_RIGHTS_UPDATES[src];
 		castleRights &= CASTLE_RIGHTS_UPDATES[dst];
 
 		updateOccupancies();
+
 		turn = (turn == Piece.WHITE ? Piece.BLACK : Piece.WHITE);
-		int kingSq = turn == Piece.WHITE ?
-				BitUtil.getLS1BIndex(bitboards[PieceType.BKING.getKey()]) :
-				BitUtil.getLS1BIndex(bitboards[PieceType.WKING.getKey()]);
+		int kingSq = turn == Piece.WHITE ? BitUtil.getLS1BIndex(bitboards[PieceType.BKING.getKey()])
+				: BitUtil.getLS1BIndex(bitboards[PieceType.WKING.getKey()]);
 		if (Bitboard.isSquareAttacked(kingSq, turn, bitboards, occupancies)) {
 			// restores previous position if the king was in check or check was unresolved
 			unMakeMove(move, undoInfo);
 			return false;
 		}
 
-//			movePiece(src, dst);
 		return true;
-
 	}
 
 	public boolean makeMove(int move, UndoInfo undoInfo, int moveFlag) {
@@ -142,13 +141,11 @@ public class Position {
 	}
 
 	public void unMakeMove(int move, UndoInfo undoInfo) {
-
+		this.pieces = undoInfo.pieces;
 		this.turn = undoInfo.turn;
 		this.epSquare = undoInfo.epSquare;
 		this.castleRights = undoInfo.castleRights;
-//		this.bitboards = undoInfo.bitboards;
-//		this.occupancies = undoInfo.occupancies;
-//		this.pieces = undoInfo.pieces;
+
 		int src = Move.getSrc(move);
 		int dst = Move.getDst(move);
 		long srcMask = 1L << src;
@@ -194,7 +191,7 @@ public class Position {
 		}
 
 		updateOccupancies();
-
+		resetPiecePositions();
 //		if (turn == Piece.WHITE) {
 //			halfMoveClock--;
 //		}
@@ -263,17 +260,52 @@ public class Position {
 	}
 
 	public boolean hasPiece(int square) {
-		return getPiece(square) != null;
+		return square >= 0 && square <= 63 && getPiece(square) != null
+				&& (getPiece(square).isWhite() ? turn == Piece.WHITE : turn == Piece.BLACK);
 	}
 
-	public void movePiece(int from, int to) {
-		Piece toMove = pieces[from];
-		pieces[to] = toMove;
-		pieces[from] = null;
+	public void movePiece(int src, int dst) {
+		if (hasPiece(src)) {
+			Piece toMove = pieces[src];
+			pieces[dst] = toMove;
+			setPiecePosition(src, dst);
+			pieces[src] = null;
+		}
 	}
 
-	public void setPiece(int piece, int sq) {
+	public void removePiece(int square) {
+		pieces[square] = null;
+	}
 
+	public void setPiecePosition(int src, int dst) {
+		int rank = BoardUtil.getRankFromIndex(dst);
+		int file = BoardUtil.getFileFromIndex(dst);
+		setPiecePosition(src, rank, file);
+	}
+
+	public void setPiecePosition(int square, int rank, int file) {
+		if (hasPiece(square)) {
+			Piece p = getPiece(square);
+			p.setX((file + ChessBoardPainter.START_FILE) * ChessBoardPainter.TILE_SIZE);
+			p.setY((rank + ChessBoardPainter.START_RANK) * ChessBoardPainter.TILE_SIZE);
+		}
+	}
+
+	public void promotePiece(int square, PieceType promotion) {
+		int rank = BoardUtil.getRankFromIndex(square);
+		int file = BoardUtil.getFileFromIndex(square);
+
+		pieces[square] = new Piece(promotion);
+		pieces[square].setX((file + ChessBoardPainter.START_FILE) * ChessBoardPainter.TILE_SIZE);
+		pieces[square].setY((rank + ChessBoardPainter.START_RANK) * ChessBoardPainter.TILE_SIZE);
+	}
+
+	public void resetPiecePositions() {
+		for (int i = 0; i < 64; i++) {
+			if (pieces[i] != null) {
+				setPiecePosition(i, i / 8, i % 8);
+			}
+		}
 	}
 
 	public int getTurn() {
@@ -329,7 +361,6 @@ public class Position {
 				} else {
 					System.out.print(" " + 0);
 				}
-
 			}
 			System.out.println();
 		}
@@ -419,7 +450,7 @@ public class Position {
 			for (int file = 0; file < 8; file++) {
 				int sq = rank * 8 + file;
 				PieceType piece = PieceType.NONE;
-				for (int key = 0; key < bitboards.length; key++) {
+				for (int key = PieceType.WPAWN.getKey(); key <= PieceType.BKING.getKey(); key++) {
 					if (BitUtil.getBit(bitboards[key], sq) == 1) {
 						piece = PieceType.valueOfKey(key);
 						break;

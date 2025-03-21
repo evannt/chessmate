@@ -3,7 +3,7 @@ package chess;
 import util.BitUtil;
 import util.RandomUtil;
 
-public class Bitboard {
+public final class Bitboard {
 
 	// TODO Optimize initilization
 

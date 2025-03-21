@@ -5,6 +5,7 @@ import chess.Move;
 import chess.Piece;
 import chess.PieceType;
 import chess.Position;
+import chess.UndoInfo;
 import util.BitUtil;
 import util.BoardUtil;
 
@@ -34,6 +35,21 @@ public class MoveGenerator {
 			for (int i = 0; i < moveCount; i++) {
 				System.out.println(Move.decodeMove(mvs[i]));
 			}
+		}
+
+		public MoveList removeIllegalMoves(Position position) {
+			MoveList validMoves = new MoveList();
+
+			UndoInfo ui = new UndoInfo();
+			for (int i = 0; i < moveCount; i++) {
+				System.out.println(Move.decodeMove(mvs[i]));
+				if (position.makeMove(mvs[i], ui)) {
+					validMoves.addMove(mvs[i]);
+					position.unMakeMove(mvs[i], ui);
+				}
+			}
+
+			return validMoves;
 		}
 
 //		public void sortMoves(Position pos) {
@@ -265,13 +281,13 @@ public class MoveGenerator {
 			}
 
 			// generate knight moves
-			if (position.getTurn() == Piece.WHITE ?
-					piece == PieceType.WKNIGHT.getKey() :
-					piece == PieceType.BKNIGHT.getKey()) {
+			if (position.getTurn() == Piece.WHITE ? piece == PieceType.WKNIGHT.getKey()
+					: piece == PieceType.BKNIGHT.getKey()) {
 				while (bitboard != 0) {
 					src = BitUtil.getLS1BIndex(bitboard);
 					attacks = Bitboard.getKnightAttacks(src)
-							& (position.getTurn() == Piece.WHITE ? ~occupancies[Piece.WHITE] : ~occupancies[Piece.BLACK]);
+							& (position.getTurn() == Piece.WHITE ? ~occupancies[Piece.WHITE]
+									: ~occupancies[Piece.BLACK]);
 
 					while (attacks != 0) {
 						dst = BitUtil.getLS1BIndex(attacks);
@@ -293,13 +309,13 @@ public class MoveGenerator {
 			}
 
 			// generate bishop moves
-			if (position.getTurn() == Piece.WHITE ?
-					piece == PieceType.WBISHOP.getKey() :
-					piece == PieceType.BBISHOP.getKey()) {
+			if (position.getTurn() == Piece.WHITE ? piece == PieceType.WBISHOP.getKey()
+					: piece == PieceType.BBISHOP.getKey()) {
 				while (bitboard != 0) {
 					src = BitUtil.getLS1BIndex(bitboard);
 					attacks = Bitboard.getBishopAttacks(src, bothOccupancies)
-							& (position.getTurn() == Piece.WHITE ? ~occupancies[Piece.WHITE] : ~occupancies[Piece.BLACK]);
+							& (position.getTurn() == Piece.WHITE ? ~occupancies[Piece.WHITE]
+									: ~occupancies[Piece.BLACK]);
 
 					while (attacks != 0) {
 						dst = BitUtil.getLS1BIndex(attacks);
@@ -322,11 +338,13 @@ public class MoveGenerator {
 			}
 
 			// generate rook moves
-			if (position.getTurn() == Piece.WHITE ? piece == PieceType.WROOK.getKey() : piece == PieceType.BROOK.getKey()) {
+			if (position.getTurn() == Piece.WHITE ? piece == PieceType.WROOK.getKey()
+					: piece == PieceType.BROOK.getKey()) {
 				while (bitboard != 0) {
 					src = BitUtil.getLS1BIndex(bitboard);
 					attacks = Bitboard.getRookAttacks(src, bothOccupancies)
-							& (position.getTurn() == Piece.WHITE ? ~occupancies[Piece.WHITE] : ~occupancies[Piece.BLACK]);
+							& (position.getTurn() == Piece.WHITE ? ~occupancies[Piece.WHITE]
+									: ~occupancies[Piece.BLACK]);
 
 					while (attacks != 0) {
 						dst = BitUtil.getLS1BIndex(attacks);
@@ -345,13 +363,13 @@ public class MoveGenerator {
 			}
 
 			// generate queen moves
-			if (position.getTurn() == Piece.WHITE ?
-					piece == PieceType.WQUEEN.getKey() :
-					piece == PieceType.BQUEEN.getKey()) {
+			if (position.getTurn() == Piece.WHITE ? piece == PieceType.WQUEEN.getKey()
+					: piece == PieceType.BQUEEN.getKey()) {
 				while (bitboard != 0) {
 					src = BitUtil.getLS1BIndex(bitboard);
 					attacks = Bitboard.getQueenAttacks(src, bothOccupancies)
-							& (position.getTurn() == Piece.WHITE ? ~occupancies[Piece.WHITE] : ~occupancies[Piece.BLACK]);
+							& (position.getTurn() == Piece.WHITE ? ~occupancies[Piece.WHITE]
+									: ~occupancies[Piece.BLACK]);
 
 					while (attacks != 0) {
 						dst = BitUtil.getLS1BIndex(attacks);
@@ -374,11 +392,13 @@ public class MoveGenerator {
 			}
 
 			// generate king moves
-			if (position.getTurn() == Piece.WHITE ? piece == PieceType.WKING.getKey() : piece == PieceType.BKING.getKey()) {
+			if (position.getTurn() == Piece.WHITE ? piece == PieceType.WKING.getKey()
+					: piece == PieceType.BKING.getKey()) {
 				while (bitboard != 0) {
 					src = BitUtil.getLS1BIndex(bitboard);
 					attacks = Bitboard.getKingAttacks(src)
-							& (position.getTurn() == Piece.WHITE ? ~occupancies[Piece.WHITE] : ~occupancies[Piece.BLACK]);
+							& (position.getTurn() == Piece.WHITE ? ~occupancies[Piece.WHITE]
+									: ~occupancies[Piece.BLACK]);
 
 					while (attacks != 0) {
 						dst = BitUtil.getLS1BIndex(attacks);

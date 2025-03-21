@@ -7,8 +7,6 @@ public class BoardUtil {
 	}
 
 	public static String getIndexAsSquare(int index) {
-//		int rank = index / 8;
-//		int file = index % 8;
 		return getFileAsLetter(getFileFromIndex(index)) + getTrueRank(getRankFromIndex(index));
 	}
 

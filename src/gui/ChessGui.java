@@ -8,6 +8,6 @@ public interface ChessGui {
 
 	public void setSelectedSquare(int square);
 
-	public void reqeustPiecePromotion();
+//	public void requestPiecePromotion(Graphics2D graphics2D);
 
 }
