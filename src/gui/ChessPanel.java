@@ -9,21 +9,20 @@ import java.awt.event.MouseMotionAdapter;
 
 import javax.swing.JPanel;
 
+import chess.GameManager;
+import chess.GameState;
+import chess.Piece;
 import chess.Position;
 import util.BoardUtil;
 
 public class ChessPanel extends JPanel implements ChessGui, Runnable {
-
-	// TODO Move board drawing methods to ChessBoardPainter
-
-	// TODO Drags onto same square to snap back to the center
 
 	private static final long serialVersionUID = -2612936424651279335L;
 
 	public static final int SCREEN_WIDTH = ChessBoardPainter.TILE_SIZE * 14;
 	public static final int SCREEN_HEIGHT = ChessBoardPainter.TILE_SIZE * 11;
 
-	// private GameManager gameManager;
+	private GameManager gameManager;
 	private ChessBoardPainter chessBoardPainter;
 
 	public ChessPanel() {
@@ -31,7 +30,10 @@ public class ChessPanel extends JPanel implements ChessGui, Runnable {
 		setDoubleBuffered(true); // improve game rendering performance
 		setFocusable(true);
 		setBackground(ChessBoardPainter.DARK_GRAY);
-		chessBoardPainter = new ChessBoardPainter();
+
+		gameManager = new GameManager(Piece.WHITE);
+		chessBoardPainter = new ChessBoardPainter(Piece.WHITE);
+
 		this.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
@@ -51,26 +53,18 @@ public class ChessPanel extends JPanel implements ChessGui, Runnable {
 		});
 	}
 
-	// Mouse Control Flow
-
-	// Mouse pressed -> set the selection
-	// Mouse released -> obtain the released selection and compare against the set selection
-	// if the intial click equals the released location
-	// The user has selected the current piece in attempt to move
-	// If the active piece is empty then the user has not yet attempt to move
-	// Otherwise the user is attempting to move the piece
-
 	public void chessPanelMousePressed(MouseEvent e) {
 		int rank = (e.getY() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_RANK;
 		int file = (e.getX() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_FILE;
 		if (rank < 0 || rank > 7 || file < 0 || file > 7) {
+			// TODO Handle ui presses
 			setSelectedSquare(-1);
 			return;
+		} else {
+			int square = BoardUtil.getIndexFromCoordinate(rank, file);
+
+			gameManager.mousePressed(e, square);
 		}
-		int square = BoardUtil.getIndexFromCoordinate(rank, file);
-//		setSelectedSquare(square);
-//		System.out.println("Selected square: " + square);
-		chessBoardPainter.mousePressed(e, square);
 		repaint();
 	}
 
@@ -78,35 +72,36 @@ public class ChessPanel extends JPanel implements ChessGui, Runnable {
 		int rank = (e.getY() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_RANK;
 		int file = (e.getX() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_FILE;
 		if (rank < 0 || rank > 7 || file < 0 || file > 7) {
+			gameManager.setGameState(GameState.HUMAN_TURN);
+			gameManager.resetActivePiecePosition();
 			setSelectedSquare(-1);
 			return;
+		} else {
+			int square = BoardUtil.getIndexFromCoordinate(rank, file);
+			gameManager.mouseReleased(e, square);
 		}
-		int square = BoardUtil.getIndexFromCoordinate(rank, file);
-		chessBoardPainter.mouseReleased(e, square);
-
-//		setSelectedSquare(square);
 		repaint();
 	}
 
 	public void chessPanelMouseDragged(MouseEvent e) {
-		chessBoardPainter.mouseDragged(e);
+		gameManager.mouseDragged(e);
 		repaint();
 	}
 
 	@Override
 	public void setBoardPosition(Position position) {
-		chessBoardPainter.setPosition(position);
+		gameManager.setPosition(position);
 		repaint();
 	}
 
 	@Override
 	public void setSelectedSquare(int square) {
-		chessBoardPainter.setSelectedSquare(square);
+		gameManager.setSelectedSquare(square);
 		repaint();
 	}
 
-	@Override
-	public void reqeustPiecePromotion() {
+	public void requestPiecePromotion(Graphics2D graphics2D) {
+		chessBoardPainter.drawPiecePromotionPrompt(graphics2D, Piece.WHITE, gameManager.getPromotedPiece());
 		repaint();
 	}
 
@@ -117,12 +112,12 @@ public class ChessPanel extends JPanel implements ChessGui, Runnable {
 		Graphics2D graphics2D = (Graphics2D) g;
 		chessBoardPainter.drawBorder(graphics2D);
 		chessBoardPainter.drawBoard(graphics2D);
-		chessBoardPainter.highlightSelectedSquare(graphics2D);
-		chessBoardPainter.drawPieces(graphics2D);
+		chessBoardPainter.highlightSelectedSquare(graphics2D, gameManager.getSelectedSquare());
+		chessBoardPainter.drawPieces(graphics2D, gameManager.getPosition());
 
-//		drawBorder(graphics2D);
-//		drawBoard(graphics2D);
-//		gameManager.draw(graphics2D);
+		if (gameManager.getGameState() == GameState.PAWN_PROMOTION) {
+			requestPiecePromotion(graphics2D);
+		}
 
 		graphics2D.dispose();
 	}

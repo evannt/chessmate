@@ -7,8 +7,8 @@ import util.ImageUtil;
 public class Piece {
 
 	public static final String PIECE_PATH = "resc/pieces/";
-	private static final String BLACK_PIECE_EXTENSION = "b.png";
-	private static final String WHITE_PIECE_EXTENSION = "w.png";
+	public static final String BLACK_PIECE_EXTENSION = "b.png";
+	public static final String WHITE_PIECE_EXTENSION = "w.png";
 
 	public static final int WHITE = 0;
 	public static final int BLACK = 1;
@@ -24,6 +24,13 @@ public class Piece {
 	public Piece(PieceType type) {
 		this.type = type;
 		this.image = ImageUtil.getImage(generatePath());
+	}
+
+	public Piece(Piece other) {
+		this.x = other.x;
+		this.y = other.y;
+		this.type = other.type;
+		this.image = other.image;
 	}
 
 	public PieceType getPieceType() {

@@ -65,6 +65,7 @@ class LegalMovesTest {
 		if (depth == 0) {
 			return 1;
 		}
+
 		MoveList moves = MoveGenerator.generateAllMoves(position);
 
 		long nodes = 0;
