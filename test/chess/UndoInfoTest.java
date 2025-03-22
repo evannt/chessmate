@@ -105,7 +105,7 @@ class UndoInfoTest {
 	@Test
 	public void testUnMakeEnPassantMove() {
 		Position position = new Position();
-		position.setPosition("rnbqkbnr/pppp1ppp/8/8/4Pp2/8/PPPP1PPP/RBNQKBNR w KQkq f4 0 1");
+		position.setPosition("rnbqkbnr/pppp1ppp/8/8/4Pp2/8/PPPP1PPP/RBNQKBNR w KQkq f5 0 1");
 
 		int e4 = BoardUtil.getSquareAsIndex("e4");
 		int f5 = BoardUtil.getSquareAsIndex("f5");

@@ -13,6 +13,8 @@ public class GameManager {
 
 	private int playerColor;
 
+	private MoveLog moveLog;
+
 	private GameState gameState;
 
 	private Position position;
@@ -24,14 +26,20 @@ public class GameManager {
 
 	public GameManager(int playerColor) {
 		this.playerColor = playerColor;
+		moveLog = new MoveLog();
 		gameState = GameState.MENU;
 		position = new Position();
-		position.setPosition(Position.START_POSITION);
+//		position.setPosition(Position.START_POSITION);
+		position.setPosition("5pk1/4P3/8/8/8/8/8/4K3 w - - 0 1");
 		selectedSquare = -1;
 		activeSquare = -1;
 		promotionSrc = -1;
 		promotionDst = -1;
 		promotedPiece = PieceType.NONE.getKey();
+	}
+
+	public MoveLog getMoveLog() {
+		return moveLog;
 	}
 
 	public GameState getGameState() {
@@ -133,16 +141,19 @@ public class GameManager {
 	}
 
 	private void movePiece(int from, int to) {
+		MoveList validMoves = MoveGenerator.generateAllMoves(position).removeIllegalMoves(position);
+		System.out.println("VALID MOVES: " + validMoves.moveCount);
 		int fromRank = BoardUtil.getRankFromIndex(from);
 		int fromFile = BoardUtil.getFileFromIndex(from);
 		int toRank = BoardUtil.getRankFromIndex(to);
 		int toFile = BoardUtil.getFileFromIndex(to);
 		System.out.println("Moving: (" + fromRank + "," + fromFile + ") to (" + toRank + "," + toFile + ")");
 		UndoInfo ui = new UndoInfo();
-		int move = getMove(from, to);
+		int move = getMove(from, to, validMoves);
 		if (move != 0) {
 			// Move the piece
 			position.makeMove(move, ui);
+			moveLog.addMove(position, validMoves, move);
 		} else {
 			// Reset location
 			position.setPiecePosition(activeSquare, fromRank, fromFile);
@@ -151,6 +162,7 @@ public class GameManager {
 	}
 
 	private void promotePiece(int selection) {
+		MoveList validMoves = MoveGenerator.generateAllMoves(position).removeIllegalMoves(position);
 		int promotionFile = BoardUtil.getFileFromIndex(promotionSrc);
 		int rank = BoardUtil.getRankFromIndex(selection);
 		int file = BoardUtil.getFileFromIndex(selection);
@@ -174,8 +186,9 @@ public class GameManager {
 				UndoInfo ui = new UndoInfo();
 
 				Piece p = position.getPiece(promotionSrc);
-				int move = getPromotion(promotionSrc, promotionDst, p, choice);
+				int move = getPromotion(promotionSrc, promotionDst, validMoves, p, choice);
 				position.makeMove(move, ui);
+				moveLog.addMove(position, validMoves, move);
 				setGameState(GameState.COMPUTER_TURN);
 			}
 			setPromotionSrc(-1);
@@ -188,8 +201,7 @@ public class GameManager {
 				BoardUtil.getFileFromIndex(activeSquare));
 	}
 
-	private int getMove(int src, int dst) {
-		MoveList validMoves = MoveGenerator.generateAllMoves(position).removeIllegalMoves(position);
+	private int getMove(int src, int dst, MoveList validMoves) {
 
 		for (int i = 0; i < validMoves.moveCount; i++) {
 			int move = validMoves.mvs[i];
@@ -211,8 +223,7 @@ public class GameManager {
 		return 0;
 	}
 
-	private int getPromotion(int src, int dst, Piece piece, int promotedPiece) {
-		MoveList validMoves = MoveGenerator.generateAllMoves(position).removeIllegalMoves(position);
+	private int getPromotion(int src, int dst, MoveList validMoves, Piece piece, int promotedPiece) {
 
 		for (int i = 0; i < validMoves.moveCount; i++) {
 			int move = validMoves.mvs[i];

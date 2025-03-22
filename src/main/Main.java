@@ -2,6 +2,8 @@ package main;
 
 import java.util.Scanner;
 
+import javax.swing.SwingUtilities;
+
 import chess.Position;
 import chess.UndoInfo;
 import engine.Evaluator;
@@ -22,8 +24,7 @@ public class Main {
 			debugPosition(position);
 		}
 
-		new ChessFrame(); // display game screen
-
+		SwingUtilities.invokeLater(() -> new ChessFrame()); // display game screen
 	}
 
 	private static void debugPosition(Position position) {

@@ -17,7 +17,7 @@ public class ChessBoardPainter {
 	public static final int TILE_SIZE = 72;
 	public static final int SCALED_TILE_SIZE = TILE_SIZE * 5;
 	public static final int START_RANK = 2;
-	public static final int START_FILE = 3;
+	public static final int START_FILE = 2;
 
 	// Border location and size
 	private static final int BORDER_X = (START_FILE * TILE_SIZE) - (TILE_SIZE / 6);
