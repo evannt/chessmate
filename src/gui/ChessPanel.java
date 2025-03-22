@@ -3,6 +3,7 @@ package gui;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -13,26 +14,31 @@ import chess.GameManager;
 import chess.GameState;
 import chess.Piece;
 import chess.Position;
+import ui.UI;
 import util.BoardUtil;
 
-public class ChessPanel extends JPanel implements ChessGui, Runnable {
+public class ChessPanel extends JPanel implements ChessGui {
 
 	private static final long serialVersionUID = -2612936424651279335L;
 
-	public static final int SCREEN_WIDTH = ChessBoardPainter.TILE_SIZE * 14;
+	public static final int SCREEN_WIDTH = ChessBoardPainter.TILE_SIZE * 15;
 	public static final int SCREEN_HEIGHT = ChessBoardPainter.TILE_SIZE * 11;
 
+	private UI userInterface;
 	private GameManager gameManager;
 	private ChessBoardPainter chessBoardPainter;
 
 	public ChessPanel() {
-		setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
+		userInterface = new UI();
+		gameManager = new GameManager(Piece.WHITE);
+		chessBoardPainter = new ChessBoardPainter(Piece.WHITE);
+		this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
 		setDoubleBuffered(true); // improve game rendering performance
 		setFocusable(true);
 		setBackground(ChessBoardPainter.DARK_GRAY);
+		this.setLayout(null);
 
-		gameManager = new GameManager(Piece.WHITE);
-		chessBoardPainter = new ChessBoardPainter(Piece.WHITE);
+		this.add(userInterface.moveLogPane);// Display);
 
 		this.addMouseListener(new MouseAdapter() {
 			@Override
@@ -51,6 +57,8 @@ public class ChessPanel extends JPanel implements ChessGui, Runnable {
 				chessPanelMouseDragged(e);
 			}
 		});
+
+		setVisible(true);
 	}
 
 	public void chessPanelMousePressed(MouseEvent e) {
@@ -78,6 +86,8 @@ public class ChessPanel extends JPanel implements ChessGui, Runnable {
 			return;
 		} else {
 			int square = BoardUtil.getIndexFromCoordinate(rank, file);
+			// Add conditional to check for valid move
+			// when moves are valid, update the move list
 			gameManager.mouseReleased(e, square);
 		}
 		repaint();
@@ -106,25 +116,24 @@ public class ChessPanel extends JPanel implements ChessGui, Runnable {
 	}
 
 	@Override
-	public void paintComponent(Graphics g) {
+	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 
-		Graphics2D graphics2D = (Graphics2D) g;
+		Graphics2D graphics2D = (Graphics2D) g.create();
+		RenderingHints rh = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING,
+				RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		graphics2D.setRenderingHints(rh);
+
 		chessBoardPainter.drawBorder(graphics2D);
 		chessBoardPainter.drawBoard(graphics2D);
 		chessBoardPainter.highlightSelectedSquare(graphics2D, gameManager.getSelectedSquare());
 		chessBoardPainter.drawPieces(graphics2D, gameManager.getPosition());
-
+		userInterface.updateMoveLog(gameManager.getMoveLog());
 		if (gameManager.getGameState() == GameState.PAWN_PROMOTION) {
 			requestPiecePromotion(graphics2D);
 		}
 
 		graphics2D.dispose();
-	}
-
-	@Override
-	public void run() {
-		System.out.println("RUN");
 	}
 
 }
