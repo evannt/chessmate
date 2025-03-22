@@ -12,8 +12,10 @@ import javax.swing.JPanel;
 
 import chess.GameManager;
 import chess.GameState;
+import chess.MoveType;
 import chess.Piece;
 import chess.Position;
+import ui.SoundManager;
 import ui.UI;
 import util.BoardUtil;
 
@@ -25,11 +27,13 @@ public class ChessPanel extends JPanel implements ChessGui {
 	public static final int SCREEN_HEIGHT = ChessBoardPainter.TILE_SIZE * 11;
 
 	private UI userInterface;
+	private SoundManager soundManager;
 	private GameManager gameManager;
 	private ChessBoardPainter chessBoardPainter;
 
 	public ChessPanel() {
 		userInterface = new UI();
+		soundManager = new SoundManager();
 		gameManager = new GameManager(Piece.WHITE);
 		chessBoardPainter = new ChessBoardPainter(Piece.WHITE);
 		this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
@@ -86,9 +90,11 @@ public class ChessPanel extends JPanel implements ChessGui {
 			return;
 		} else {
 			int square = BoardUtil.getIndexFromCoordinate(rank, file);
-			// Add conditional to check for valid move
-			// when moves are valid, update the move list
-			gameManager.mouseReleased(e, square);
+
+			MoveType moveType = gameManager.mouseReleased(e, square);
+			System.out.println("PLAY SOUND: " + moveType.getSoundKey());
+
+			soundManager.playSound(moveType.getSoundKey());
 		}
 		repaint();
 	}
