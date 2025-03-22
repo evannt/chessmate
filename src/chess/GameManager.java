@@ -29,8 +29,7 @@ public class GameManager {
 		moveLog = new MoveLog();
 		gameState = GameState.MENU;
 		position = new Position();
-//		position.setPosition(Position.START_POSITION);
-		position.setPosition("5pk1/4P3/8/8/8/8/8/4K3 w - - 0 1");
+		position.setPosition(Position.START_POSITION);
 		selectedSquare = -1;
 		activeSquare = -1;
 		promotionSrc = -1;
@@ -102,12 +101,13 @@ public class GameManager {
 		}
 	}
 
-	public void mouseReleased(MouseEvent e, int square) {
+	public MoveType mouseReleased(MouseEvent e, int square) {
+		MoveType moveType = MoveType.NONE;
 		if (gameState == GameState.PAWN_PROMOTION) {
-			promotePiece(square);
+			moveType = promotePiece(square);
 		} else if (selectedSquare == square) {
 			if (activeSquare != square && activeSquare != -1) { // Clicking move
-				movePiece(activeSquare, square);
+				moveType = movePiece(activeSquare, square);
 				setSelectedSquare(-1);
 				setActiveSquare(-1);
 			} else {
@@ -119,7 +119,7 @@ public class GameManager {
 				setSelectedSquare(-1);
 				setActiveSquare(-1);
 			} else {
-				movePiece(selectedSquare, square);
+				moveType = movePiece(selectedSquare, square);
 				setSelectedSquare(-1);
 				setActiveSquare(-1);
 			}
@@ -127,6 +127,7 @@ public class GameManager {
 
 		position.drawPieces();
 		System.out.println(position.getFenString());
+		return moveType;
 	}
 
 	public void mouseDragged(MouseEvent e) {
@@ -140,9 +141,8 @@ public class GameManager {
 		}
 	}
 
-	private void movePiece(int from, int to) {
+	private MoveType movePiece(int from, int to) {
 		MoveList validMoves = MoveGenerator.generateAllMoves(position).removeIllegalMoves(position);
-		System.out.println("VALID MOVES: " + validMoves.moveCount);
 		int fromRank = BoardUtil.getRankFromIndex(from);
 		int fromFile = BoardUtil.getFileFromIndex(from);
 		int toRank = BoardUtil.getRankFromIndex(to);
@@ -150,24 +150,29 @@ public class GameManager {
 		System.out.println("Moving: (" + fromRank + "," + fromFile + ") to (" + toRank + "," + toFile + ")");
 		UndoInfo ui = new UndoInfo();
 		int move = getMove(from, to, validMoves);
-		if (move != 0) {
-			// Move the piece
-			position.makeMove(move, ui);
-			moveLog.addMove(position, validMoves, move);
-		} else {
+		if (move == 0) {
 			// Reset location
 			position.setPiecePosition(activeSquare, fromRank, fromFile);
+			return MoveType.INVALID;
 		}
-
+		if (Move.getPromotedPiece(move) != 0) {
+			position.setPiecePosition(activeSquare, fromRank, fromFile);
+			return MoveType.NONE;
+		}
+		// Move the piece
+		position.makeMove(move, ui);
+		moveLog.addMove(position, validMoves, move);
+		return MoveType.getMoveType(move, position.isInCheck());
 	}
 
-	private void promotePiece(int selection) {
+	private MoveType promotePiece(int selection) {
 		MoveList validMoves = MoveGenerator.generateAllMoves(position).removeIllegalMoves(position);
 		int promotionFile = BoardUtil.getFileFromIndex(promotionSrc);
 		int rank = BoardUtil.getRankFromIndex(selection);
 		int file = BoardUtil.getFileFromIndex(selection);
 		if (file != promotionFile) {
 			setGameState(GameState.HUMAN_TURN);
+			return MoveType.NONE;
 		} else {
 			int choice = switch (rank) {
 			case ChessBoardPainter.QUEEN_PROMOTION ->
@@ -182,17 +187,19 @@ public class GameManager {
 			};
 			if (choice == PieceType.NONE.getKey()) {
 				setGameState(GameState.HUMAN_TURN);
-			} else {
-				UndoInfo ui = new UndoInfo();
-
-				Piece p = position.getPiece(promotionSrc);
-				int move = getPromotion(promotionSrc, promotionDst, validMoves, p, choice);
-				position.makeMove(move, ui);
-				moveLog.addMove(position, validMoves, move);
-				setGameState(GameState.COMPUTER_TURN);
+				setPromotionSrc(-1);
+				setPromotionDst(-1);
+				return MoveType.NONE;
 			}
+			UndoInfo ui = new UndoInfo();
+			Piece p = position.getPiece(promotionSrc);
+			int move = getPromotion(promotionSrc, promotionDst, validMoves, p, choice);
+			position.makeMove(move, ui);
+			moveLog.addMove(position, validMoves, move);
+			setGameState(GameState.COMPUTER_TURN);
 			setPromotionSrc(-1);
 			setPromotionDst(-1);
+			return MoveType.getMoveType(move, position.isInCheck());
 		}
 	}
 
@@ -205,18 +212,16 @@ public class GameManager {
 
 		for (int i = 0; i < validMoves.moveCount; i++) {
 			int move = validMoves.mvs[i];
-			System.out.println(Move.decodeMove(move));
 			if (Move.getSrc(move) == src && Move.getDst(move) == dst) {
 				if (Move.getPromotedPiece(move) == PieceType.NONE.getKey()) {
 					return move;
-				} else {
-					setGameState(GameState.PAWN_PROMOTION);
-					setSelectedSquare(-1);
-					setActiveSquare(-1);
-					setPromotionSrc(src);
-					setPromotionDst(dst);
-					return 0;
 				}
+				setGameState(GameState.PAWN_PROMOTION);
+				setSelectedSquare(-1);
+				setActiveSquare(-1);
+				setPromotionSrc(src);
+				setPromotionDst(dst);
+				return move;
 			}
 		}
 
@@ -227,7 +232,6 @@ public class GameManager {
 
 		for (int i = 0; i < validMoves.moveCount; i++) {
 			int move = validMoves.mvs[i];
-			System.out.println(Move.decodeMove(move));
 			if (Move.getSrc(move) == src && Move.getDst(move) == dst && Move.getPromotedPiece(move) == promotedPiece) {
 				setGameState(GameState.PAWN_PROMOTION);
 				return move;

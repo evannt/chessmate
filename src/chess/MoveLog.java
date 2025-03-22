@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import engine.MoveGenerator.MoveList;
-import util.BitUtil;
 import util.BoardUtil;
 
 public class MoveLog {
@@ -105,13 +104,7 @@ public class MoveLog {
 			default -> "=" + promotionType.getId();
 			});
 		}
-		int kingSq = position.getTurn() == Piece.WHITE
-				? BitUtil.getLS1BIndex(position.getBitboards()[PieceType.WKING.getKey()])
-				: BitUtil.getLS1BIndex(position.getBitboards()[PieceType.BKING.getKey()]);
-		int opponent = position.getTurn() == Piece.WHITE ? Piece.BLACK : Piece.WHITE;
-		if (Bitboard.isSquareAttacked(kingSq, opponent, position.getBitboards(), position.getOccupancies())) {
-			sb.append("+");
-		}
+		sb.append(position.isInCheck() ? "+" : "");
 
 		return sb.toString();
 	}
