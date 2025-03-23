@@ -1,7 +1,13 @@
-package chess;
+package game;
 
 import java.awt.event.MouseEvent;
 
+import chess.Move;
+import chess.MoveLog;
+import chess.Piece;
+import chess.PieceType;
+import chess.Position;
+import chess.UndoInfo;
 import engine.MoveGenerator;
 import engine.MoveGenerator.MoveList;
 import gui.ChessBoardPainter;
@@ -24,8 +30,8 @@ public class GameManager {
 	private int promotionDst;
 	private int promotedPiece;
 
-	public GameManager(int playerColor) {
-		this.playerColor = playerColor;
+	public GameManager(GameMode gameMode, int playerColor) {
+		this.playerColor = Piece.WHITE;
 		moveLog = new MoveLog();
 		gameState = GameState.MENU;
 		position = new Position();

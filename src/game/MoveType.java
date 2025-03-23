@@ -1,4 +1,6 @@
-package chess;
+package game;
+
+import chess.Move;
 
 public enum MoveType {
 

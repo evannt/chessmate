@@ -10,16 +10,16 @@ import java.awt.event.MouseMotionAdapter;
 
 import javax.swing.JPanel;
 
-import chess.GameManager;
-import chess.GameState;
-import chess.MoveType;
 import chess.Piece;
-import chess.Position;
+import game.GameManager;
+import game.GameMode;
+import game.GameState;
+import game.MoveType;
 import ui.SoundManager;
 import ui.UI;
 import util.BoardUtil;
 
-public class ChessPanel extends JPanel implements ChessGui {
+public class ChessPanel extends JPanel {
 
 	private static final long serialVersionUID = -2612936424651279335L;
 
@@ -32,19 +32,13 @@ public class ChessPanel extends JPanel implements ChessGui {
 	private ChessBoardPainter chessBoardPainter;
 
 	public ChessPanel() {
-		userInterface = new UI();
-		soundManager = new SoundManager();
-		gameManager = new GameManager(Piece.WHITE);
-		chessBoardPainter = new ChessBoardPainter(Piece.WHITE);
-		this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
+		setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
 		setDoubleBuffered(true); // improve game rendering performance
 		setFocusable(true);
 		setBackground(ChessBoardPainter.DARK_GRAY);
-		this.setLayout(null);
+		setLayout(null);
 
-		this.add(userInterface.moveLogPane);// Display);
-
-		this.addMouseListener(new MouseAdapter() {
+		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				chessPanelMousePressed(e);
@@ -55,7 +49,7 @@ public class ChessPanel extends JPanel implements ChessGui {
 				chessPanelMouseReleased(e);
 			}
 		});
-		this.addMouseMotionListener(new MouseMotionAdapter() {
+		addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				chessPanelMouseDragged(e);
@@ -65,12 +59,20 @@ public class ChessPanel extends JPanel implements ChessGui {
 		setVisible(true);
 	}
 
+	public void setupGame(GameMode gameMode, int playerColor) {
+		userInterface = new UI();
+		soundManager = new SoundManager();
+		gameManager = new GameManager(gameMode, playerColor);
+		chessBoardPainter = new ChessBoardPainter(playerColor);
+		add(userInterface.moveLogPane);
+	}
+
 	public void chessPanelMousePressed(MouseEvent e) {
 		int rank = (e.getY() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_RANK;
 		int file = (e.getX() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_FILE;
 		if (rank < 0 || rank > 7 || file < 0 || file > 7) {
 			// TODO Handle ui presses
-			setSelectedSquare(-1);
+			gameManager.setSelectedSquare(-1);
 			return;
 		} else {
 			int square = BoardUtil.getIndexFromCoordinate(rank, file);
@@ -86,14 +88,12 @@ public class ChessPanel extends JPanel implements ChessGui {
 		if (rank < 0 || rank > 7 || file < 0 || file > 7) {
 			gameManager.setGameState(GameState.HUMAN_TURN);
 			gameManager.resetActivePiecePosition();
-			setSelectedSquare(-1);
+			gameManager.setSelectedSquare(-1);
 			return;
 		} else {
 			int square = BoardUtil.getIndexFromCoordinate(rank, file);
 
 			MoveType moveType = gameManager.mouseReleased(e, square);
-			System.out.println("PLAY SOUND: " + moveType.getSoundKey());
-
 			soundManager.playSound(moveType.getSoundKey());
 		}
 		repaint();
@@ -101,18 +101,6 @@ public class ChessPanel extends JPanel implements ChessGui {
 
 	public void chessPanelMouseDragged(MouseEvent e) {
 		gameManager.mouseDragged(e);
-		repaint();
-	}
-
-	@Override
-	public void setBoardPosition(Position position) {
-		gameManager.setPosition(position);
-		repaint();
-	}
-
-	@Override
-	public void setSelectedSquare(int square) {
-		gameManager.setSelectedSquare(square);
 		repaint();
 	}
 
@@ -126,9 +114,9 @@ public class ChessPanel extends JPanel implements ChessGui {
 		super.paintComponent(g);
 
 		Graphics2D graphics2D = (Graphics2D) g.create();
-		RenderingHints rh = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING,
-				RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		graphics2D.setRenderingHints(rh);
+		graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		graphics2D.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		graphics2D.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 
 		chessBoardPainter.drawBorder(graphics2D);
 		chessBoardPainter.drawBoard(graphics2D);
