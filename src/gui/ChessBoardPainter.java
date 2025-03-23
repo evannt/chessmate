@@ -41,7 +41,10 @@ public class ChessBoardPainter {
 	public static final Color UI_COLOR = Color.gray;
 	public static final Color TAN = new Color(238, 238, 210);
 	public static final Color GREEN = new Color(118, 150, 86);
-	public static final Font GEOGRIA_11 = new Font("Arial", Font.BOLD, 11);
+	public static final Font ARIAL_11 = new Font("Arial", Font.BOLD, 11);
+
+	// TODO Add different drawing for Player vs Computer when player picks black
+	// pieces
 
 	public ChessBoardPainter(int playerColor) {
 		if (playerColor == Piece.WHITE) {
@@ -71,7 +74,7 @@ public class ChessBoardPainter {
 					graphics2D.setColor(TAN);
 				}
 				graphics2D.fillRect(file * TILE_SIZE, rank * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-				graphics2D.setFont(GEOGRIA_11);
+				graphics2D.setFont(ARIAL_11);
 				graphics2D.setColor(Color.DARK_GRAY);
 				if (Math.abs(rank - START_RANK) == 7) {
 					graphics2D.drawString(BoardUtil.getFileAsLetter(file - START_FILE),
