@@ -10,6 +10,7 @@ This project is a chess engine that can be used to play, practice, and improve y
 * Move generation and validation
 * Move searching
 * FEN Notation support
+* Algebraic notation for moves
 
 ## :tv: Demo 
 
