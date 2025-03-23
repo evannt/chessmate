@@ -14,8 +14,8 @@ This project is a chess engine that can be used to play, practice, and improve y
 
 ## :tv: Demo 
 
-Coming soon
+Coming soon...
 
 ## :inbox_tray: Installation and Instructions
 
-Coming soon
+Coming soon...
