@@ -2,11 +2,14 @@ package ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dialog;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -30,7 +33,7 @@ public class ChessColorSelector extends JDialog {
 
 	private int selectedColor;
 
-	public ChessColorSelector() {
+	public ChessColorSelector(JPanel parent) {
 		selectedColor = -1;
 		int randomColor = Math.random() > 0.5 ? Piece.WHITE : Piece.BLACK;
 
@@ -46,16 +49,28 @@ public class ChessColorSelector extends JDialog {
 		JButton blackColorButton = createColorButton(Piece.BLACK, BLACK_COLOR_ICON);
 
 		buttonPanel.add(prompt, BorderLayout.NORTH);
-		buttonPanel.add(whiteColorButton, BorderLayout.EAST);
+		buttonPanel.add(whiteColorButton, BorderLayout.WEST);
 		buttonPanel.add(randomColorButton, BorderLayout.CENTER);
-		buttonPanel.add(blackColorButton, BorderLayout.WEST);
+		buttonPanel.add(blackColorButton, BorderLayout.EAST);
 
 		add(buttonPanel);
+
+		addWindowFocusListener(new WindowFocusListener() {
+			@Override
+			public void windowGainedFocus(WindowEvent e) {
+			}
+
+			@Override
+			public void windowLostFocus(WindowEvent e) {
+				dispose();
+			}
+		});
+
+		setUndecorated(true);
 		pack();
-		setIconImage(null);
-		setModal(true);
+		setModalityType(Dialog.ModalityType.DOCUMENT_MODAL);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setLocationRelativeTo(null);
+		setLocationRelativeTo(parent);
 		setVisible(true);
 	}
 

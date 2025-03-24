@@ -10,57 +10,41 @@ import chess.Position;
 import chess.UndoInfo;
 import engine.MoveGenerator;
 import engine.MoveGenerator.MoveList;
+import event.ChessEventManager;
+import event.ChessEventType;
+import event.PawnPromotionEvent;
 import gui.ChessBoardPainter;
 import util.BoardUtil;
 
 public class GameManager {
 
 	// TODO Add support for player vs. player and player vs. computer
+	private ChessEventManager chessEventManager;
 
 	private int playerColor;
 
 	private MoveLog moveLog;
 
-	private GameState gameState;
-
 	private Position position;
 	private int selectedSquare;
 	private int activeSquare;
-	private int promotionSrc;
-	private int promotionDst;
-	private int promotedPiece;
 
 	public GameManager(GameMode gameMode, int playerColor) {
 		this.playerColor = Piece.WHITE;
+		chessEventManager = new ChessEventManager(ChessEventType.PAWN_PROMOTION);
 		moveLog = new MoveLog();
-		gameState = GameState.MENU;
 		position = new Position();
 		position.setPosition(Position.START_POSITION);
 		selectedSquare = -1;
 		activeSquare = -1;
-		promotionSrc = -1;
-		promotionDst = -1;
-		promotedPiece = PieceType.NONE.getKey();
 	}
 
 	public MoveLog getMoveLog() {
 		return moveLog;
 	}
 
-	public GameState getGameState() {
-		return gameState;
-	}
-
-	public void setGameState(GameState gameState) {
-		this.gameState = gameState;
-	}
-
 	public Position getPosition() {
 		return position;
-	}
-
-	public void setPosition(Position position) {
-		this.position = position;
 	}
 
 	public int getSelectedSquare() {
@@ -75,32 +59,12 @@ public class GameManager {
 		this.activeSquare = activeSquare;
 	}
 
-	public int getPromotionSrc() {
-		return promotionSrc;
-	}
-
-	public void setPromotionSrc(int promotionSrc) {
-		this.promotionSrc = promotionSrc;
-	}
-
-	public int getPromotionDst() {
-		return promotionDst;
-	}
-
-	public void setPromotionDst(int promotionDst) {
-		this.promotionDst = promotionDst;
-	}
-
-	public int getPromotedPiece() {
-		return promotedPiece;
-	}
-
-	public void setPromotedPiece(int promotedPiece) {
-		this.promotedPiece = promotedPiece;
+	public ChessEventManager getChessEventManager() {
+		return chessEventManager;
 	}
 
 	public void mousePressed(MouseEvent e, int square) {
-		if (selectedSquare == -1 && gameState != GameState.PAWN_PROMOTION) { // Attempting to select a piece
+		if (selectedSquare == -1) { // Attempting to select a piece
 			if (position.hasPiece(square)) {
 				setSelectedSquare(square);
 			}
@@ -109,9 +73,7 @@ public class GameManager {
 
 	public MoveType mouseReleased(MouseEvent e, int square) {
 		MoveType moveType = MoveType.NONE;
-		if (gameState == GameState.PAWN_PROMOTION) {
-			moveType = promotePiece(square);
-		} else if (selectedSquare == square) {
+		if (selectedSquare == square) {
 			if (activeSquare != square && activeSquare != -1) { // Clicking move
 				moveType = movePiece(activeSquare, square);
 				setSelectedSquare(-1);
@@ -137,7 +99,7 @@ public class GameManager {
 	}
 
 	public void mouseDragged(MouseEvent e) {
-		if (selectedSquare != -1 && gameState != GameState.PAWN_PROMOTION) {
+		if (selectedSquare != -1) {
 			setActiveSquare(selectedSquare);
 			Piece p = position.getPiece(selectedSquare);
 			if (p != null) {
@@ -151,9 +113,7 @@ public class GameManager {
 		MoveList validMoves = MoveGenerator.generateAllMoves(position).removeIllegalMoves(position);
 		int fromRank = BoardUtil.getRankFromIndex(from);
 		int fromFile = BoardUtil.getFileFromIndex(from);
-		int toRank = BoardUtil.getRankFromIndex(to);
-		int toFile = BoardUtil.getFileFromIndex(to);
-		System.out.println("Moving: (" + fromRank + "," + fromFile + ") to (" + toRank + "," + toFile + ")");
+
 		UndoInfo ui = new UndoInfo();
 		int move = getMove(from, to, validMoves);
 		if (move == 0) {
@@ -162,51 +122,17 @@ public class GameManager {
 			return MoveType.INVALID;
 		}
 		if (Move.getPromotedPiece(move) != 0) {
+			// Pawn Promotion
 			position.setPiecePosition(activeSquare, fromRank, fromFile);
-			return MoveType.NONE;
+			PawnPromotionEvent promotionEvent = new PawnPromotionEvent(to, playerColor);
+			chessEventManager.notify(ChessEventType.PAWN_PROMOTION, promotionEvent);
+			PieceType promotedPiece = promotionEvent.getPromotedPiece();
+			move = Move.encodeNewPromotion(move, promotedPiece.getKey());
 		}
 		// Move the piece
 		position.makeMove(move, ui);
 		moveLog.addMove(position, validMoves, move);
 		return MoveType.getMoveType(move, position.isInCheck());
-	}
-
-	private MoveType promotePiece(int selection) {
-		MoveList validMoves = MoveGenerator.generateAllMoves(position).removeIllegalMoves(position);
-		int promotionFile = BoardUtil.getFileFromIndex(promotionSrc);
-		int rank = BoardUtil.getRankFromIndex(selection);
-		int file = BoardUtil.getFileFromIndex(selection);
-		if (file != promotionFile) {
-			setGameState(GameState.HUMAN_TURN);
-			return MoveType.NONE;
-		} else {
-			int choice = switch (rank) {
-			case ChessBoardPainter.QUEEN_PROMOTION ->
-				playerColor == Piece.WHITE ? PieceType.WQUEEN.getKey() : PieceType.BQUEEN.getKey();
-			case ChessBoardPainter.KNIGHT_PROMOTION ->
-				playerColor == Piece.WHITE ? PieceType.WKNIGHT.getKey() : PieceType.BKNIGHT.getKey();
-			case ChessBoardPainter.ROOK_PROMOTION ->
-				playerColor == Piece.WHITE ? PieceType.WROOK.getKey() : PieceType.BROOK.getKey();
-			case ChessBoardPainter.BISHOP_PROMOTION ->
-				playerColor == Piece.WHITE ? PieceType.WBISHOP.getKey() : PieceType.BBISHOP.getKey();
-			default -> PieceType.NONE.getKey();
-			};
-			if (choice == PieceType.NONE.getKey()) {
-				setGameState(GameState.HUMAN_TURN);
-				setPromotionSrc(-1);
-				setPromotionDst(-1);
-				return MoveType.NONE;
-			}
-			UndoInfo ui = new UndoInfo();
-			Piece p = position.getPiece(promotionSrc);
-			int move = getPromotion(promotionSrc, promotionDst, validMoves, p, choice);
-			position.makeMove(move, ui);
-			moveLog.addMove(position, validMoves, move);
-			setGameState(GameState.COMPUTER_TURN);
-			setPromotionSrc(-1);
-			setPromotionDst(-1);
-			return MoveType.getMoveType(move, position.isInCheck());
-		}
 	}
 
 	public void resetActivePiecePosition() {
@@ -215,31 +141,9 @@ public class GameManager {
 	}
 
 	private int getMove(int src, int dst, MoveList validMoves) {
-
 		for (int i = 0; i < validMoves.moveCount; i++) {
 			int move = validMoves.mvs[i];
 			if (Move.getSrc(move) == src && Move.getDst(move) == dst) {
-				if (Move.getPromotedPiece(move) == PieceType.NONE.getKey()) {
-					return move;
-				}
-				setGameState(GameState.PAWN_PROMOTION);
-				setSelectedSquare(-1);
-				setActiveSquare(-1);
-				setPromotionSrc(src);
-				setPromotionDst(dst);
-				return move;
-			}
-		}
-
-		return 0;
-	}
-
-	private int getPromotion(int src, int dst, MoveList validMoves, Piece piece, int promotedPiece) {
-
-		for (int i = 0; i < validMoves.moveCount; i++) {
-			int move = validMoves.mvs[i];
-			if (Move.getSrc(move) == src && Move.getDst(move) == dst && Move.getPromotedPiece(move) == promotedPiece) {
-				setGameState(GameState.PAWN_PROMOTION);
 				return move;
 			}
 		}

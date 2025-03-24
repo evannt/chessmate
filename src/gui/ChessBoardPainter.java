@@ -3,15 +3,23 @@ package gui;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
+import java.awt.Point;
+
+import javax.swing.SwingUtilities;
 
 import chess.Piece;
 import chess.PieceType;
 import chess.Position;
+import event.ChessEvent;
+import event.ChessEventListener;
+import event.ChessEventType;
+import event.PawnPromotionEvent;
+import ui.PawnPromotionPrompt;
 import util.BoardUtil;
-import util.ImageUtil;
 
-public class ChessBoardPainter {
+public class ChessBoardPainter implements ChessEventListener {
+	// TODO Add a custom listener to draw pawn promotion
+	// TODO Listen to the GameManager
 
 	// Chess square sizes and location
 	public static final int TILE_SIZE = 72;
@@ -23,12 +31,6 @@ public class ChessBoardPainter {
 	private static final int BORDER_X = (START_FILE * TILE_SIZE) - (TILE_SIZE / 6);
 	private static final int BORDER_Y = (START_RANK * TILE_SIZE) - (TILE_SIZE / 6);
 	private static final int BORDER_SIZE = (TILE_SIZE * 8) + ((int) (TILE_SIZE / 2.8));
-
-	// Pawn promotion pieces
-	private static BufferedImage queen;
-	private static BufferedImage knight;
-	private static BufferedImage rook;
-	private static BufferedImage bishop;
 
 	public static final int QUEEN_PROMOTION = 0;
 	public static final int KNIGHT_PROMOTION = 1;
@@ -46,18 +48,10 @@ public class ChessBoardPainter {
 	// TODO Add different drawing for Player vs Computer when player picks black
 	// pieces
 
-	public ChessBoardPainter(int playerColor) {
-		if (playerColor == Piece.WHITE) {
-			queen = ImageUtil.getImage(Piece.PIECE_PATH + PieceType.WQUEEN.getId() + Piece.WHITE_PIECE_EXTENSION);
-			rook = ImageUtil.getImage(Piece.PIECE_PATH + PieceType.WROOK.getId() + Piece.WHITE_PIECE_EXTENSION);
-			bishop = ImageUtil.getImage(Piece.PIECE_PATH + PieceType.WBISHOP.getId() + Piece.WHITE_PIECE_EXTENSION);
-			knight = ImageUtil.getImage(Piece.PIECE_PATH + PieceType.WKNIGHT.getId() + Piece.WHITE_PIECE_EXTENSION);
-		} else {
-			queen = ImageUtil.getImage(Piece.PIECE_PATH + PieceType.BQUEEN.getId() + Piece.BLACK_PIECE_EXTENSION);
-			rook = ImageUtil.getImage(Piece.PIECE_PATH + PieceType.BROOK.getId() + Piece.BLACK_PIECE_EXTENSION);
-			bishop = ImageUtil.getImage(Piece.PIECE_PATH + PieceType.BBISHOP.getId() + Piece.BLACK_PIECE_EXTENSION);
-			knight = ImageUtil.getImage(Piece.PIECE_PATH + PieceType.BKNIGHT.getId() + Piece.BLACK_PIECE_EXTENSION);
-		}
+	private ChessPanel chessPanel;
+
+	public ChessBoardPainter(ChessPanel chessPanel) {
+		this.chessPanel = chessPanel;
 	}
 
 	public void drawBorder(Graphics2D graphics2D) {
@@ -102,24 +96,16 @@ public class ChessBoardPainter {
 		}
 	}
 
-	public void drawPiecePromotionPrompt(Graphics2D graphics2D, int color, int square) {
+	public PieceType drawPiecePromotionPrompt(int color, int square) {
 		int rank = BoardUtil.getRankFromIndex(square);
 		int file = BoardUtil.getFileFromIndex(square);
-		int queenX = (file + START_FILE) * TILE_SIZE;
-		int queenY = (rank + START_RANK) * TILE_SIZE;
-		int knightX = (file + START_FILE) * TILE_SIZE;
-		int knightY = (rank + START_RANK) * TILE_SIZE + TILE_SIZE;
-		int rookX = (file + START_FILE) * TILE_SIZE;
-		int rookY = (rank + START_RANK) * TILE_SIZE + (2 * TILE_SIZE);
-		int bishopX = (file + START_FILE) * TILE_SIZE;
-		int bishopY = (rank + START_RANK) * TILE_SIZE + (3 * TILE_SIZE);
+		int x = (file + START_FILE) * TILE_SIZE;
+		int y = (rank + START_RANK) * TILE_SIZE;
+		Point point = new Point(x, y);
+		SwingUtilities.convertPointToScreen(point, chessPanel);
+		PawnPromotionPrompt prompt = new PawnPromotionPrompt(color, point.x, point.y);
 
-		graphics2D.setColor(UI_COLOR);
-		graphics2D.fillRect(queenX, queenY, TILE_SIZE, 4 * TILE_SIZE);
-		graphics2D.drawImage(queen, queenX, queenY, TILE_SIZE, TILE_SIZE, null);
-		graphics2D.drawImage(knight, knightX, knightY, TILE_SIZE, TILE_SIZE, null);
-		graphics2D.drawImage(rook, rookX, rookY, TILE_SIZE, TILE_SIZE, null);
-		graphics2D.drawImage(bishop, bishopX, bishopY, TILE_SIZE, TILE_SIZE, null);
+		return prompt.getPromotionSelection();
 	}
 
 	public void highlightSelectedSquare(Graphics2D graphics2D, int selectedSquare) {
@@ -131,6 +117,16 @@ public class ChessBoardPainter {
 			graphics2D.setColor(new Color(255, 255, 0, 92));
 			graphics2D.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 		}
+	}
+
+	@Override
+	public void update(ChessEventType eventType, ChessEvent event) {
+		if (event instanceof PawnPromotionEvent promotionEvent) {
+			int color = promotionEvent.getColor();
+			int square = promotionEvent.getTargetSquare();
+			promotionEvent.setPromotionResponse(drawPiecePromotionPrompt(color, square));
+		}
+
 	}
 
 }
