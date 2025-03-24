@@ -21,6 +21,11 @@ public class Move {
 				| (doublePawnPushFlag << 21) | (enPassantFlag << 22) | (castleFlag << 23);
 	}
 
+	public static final int encodeNewPromotion(int move, int promotedPiece) {
+		return encodeMove(getSrc(move), getDst(move), getPiece(move), promotedPiece, getCaptureFlag(move),
+				getDoublePawnPushFlag(move), getEnPassantFlag(move), getCastleFlag(move));
+	}
+
 	public static final int scoreMove(Position pos, int moveEncoding) {
 		if (getCaptureFlag(moveEncoding) != 0) {
 			int targetPiece = PieceType.WPAWN.getKey();

@@ -10,10 +10,9 @@ import java.awt.event.MouseMotionAdapter;
 
 import javax.swing.JPanel;
 
-import chess.Piece;
+import event.ChessEventType;
 import game.GameManager;
 import game.GameMode;
-import game.GameState;
 import game.MoveType;
 import ui.SoundManager;
 import ui.UI;
@@ -63,7 +62,8 @@ public class ChessPanel extends JPanel {
 		userInterface = new UI();
 		soundManager = new SoundManager();
 		gameManager = new GameManager(gameMode, playerColor);
-		chessBoardPainter = new ChessBoardPainter(playerColor);
+		chessBoardPainter = new ChessBoardPainter(this);
+		gameManager.getChessEventManager().subscribe(chessBoardPainter, ChessEventType.values());
 		add(userInterface.moveLogPane);
 	}
 
@@ -86,7 +86,6 @@ public class ChessPanel extends JPanel {
 		int rank = (e.getY() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_RANK;
 		int file = (e.getX() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_FILE;
 		if (rank < 0 || rank > 7 || file < 0 || file > 7) {
-			gameManager.setGameState(GameState.HUMAN_TURN);
 			gameManager.resetActivePiecePosition();
 			gameManager.setSelectedSquare(-1);
 			return;
@@ -104,11 +103,6 @@ public class ChessPanel extends JPanel {
 		repaint();
 	}
 
-	public void requestPiecePromotion(Graphics2D graphics2D) {
-		chessBoardPainter.drawPiecePromotionPrompt(graphics2D, Piece.WHITE, gameManager.getPromotedPiece());
-		repaint();
-	}
-
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
@@ -123,9 +117,6 @@ public class ChessPanel extends JPanel {
 		chessBoardPainter.highlightSelectedSquare(graphics2D, gameManager.getSelectedSquare());
 		chessBoardPainter.drawPieces(graphics2D, gameManager.getPosition());
 		userInterface.updateMoveLog(gameManager.getMoveLog());
-		if (gameManager.getGameState() == GameState.PAWN_PROMOTION) {
-			requestPiecePromotion(graphics2D);
-		}
 
 		graphics2D.dispose();
 	}

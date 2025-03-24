@@ -65,6 +65,7 @@ public class MainMenu extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				int playerColor = getPlayerColor();
+				System.out.println("Got Color: " + playerColor);
 				if (playerColor != Piece.WHITE && playerColor != Piece.BLACK) {
 					parent.switchPanel(ChessFrame.MAIN_MENU);
 				} else {
@@ -108,7 +109,7 @@ public class MainMenu extends JPanel {
 	}
 
 	public int getPlayerColor() {
-		ChessColorSelector colorSelector = new ChessColorSelector();
+		ChessColorSelector colorSelector = new ChessColorSelector(this);
 		int selectedColor = colorSelector.getSelectedColor();
 
 		return selectedColor;
