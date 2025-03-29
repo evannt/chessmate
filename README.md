@@ -1,4 +1,4 @@
-# :chess_pawn: Chess Engine
+# :chess_pawn: Chessmate
 
 ### A functional chess engine written completely in Java! You can play against a friend or against a worthy AI opponent.
 
