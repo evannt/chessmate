@@ -16,7 +16,8 @@ public class Searcher {
 	private static final int MAX_PLY = 64;
 
 	// Most Valuable Victim Least Valuable Attacker
-	public static final int MVV_LVA[][] = { { 000, 000, 000, 000, 000, 000, 000, 000, 000, 000, 000, 000 },
+	public static final int MVV_LVA[][] = {
+			{ 000, 000, 000, 000, 000, 000, 000, 000, 000, 000, 000, 000 },
 			{ 0, 105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605 },
 			{ 0, 104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604 },
 			{ 0, 103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603 },
@@ -41,8 +42,8 @@ public class Searcher {
 	private int pvLength[];
 	private int pvTable[][];
 
-	public Searcher(Position pos) {
-		this.pos = pos;
+	public Searcher() {
+//		this.pos = pos;
 		nodes = 0;
 		killerMoves = new int[2][64];
 		historyMoves = new int[PieceType.values().length + 1][64];
@@ -54,11 +55,11 @@ public class Searcher {
 		this.pos = pos;
 	}
 
-	public void search(int depth) {
-		iterativeDeepending(depth);
+	public int search(int depth) {
+		return iterativeDeepending(depth);
 	}
 
-	public void iterativeDeepending(int depth) {
+	public int iterativeDeepending(int depth) {
 		int score = 0;
 		nodes = 0;
 
@@ -89,6 +90,7 @@ public class Searcher {
 			System.out.println(Move.decodeMove(pvTable[0][c]));
 		}
 		System.out.println("Best move: " + Move.decodeMove(pvTable[0][0]));
+		return pvTable[0][0];
 	}
 
 	public int negamax(int alpha, int beta, int depth) {
@@ -104,7 +106,8 @@ public class Searcher {
 
 		int legalMoves = 0;
 		boolean isKingInCheck = Bitboard.isSquareAttacked(
-				pos.getTurn() == Piece.WHITE ? BitUtil.getLS1BIndex(pos.getBitboards()[PieceType.WKING.getKey()])
+				pos.getTurn() == Piece.WHITE
+						? BitUtil.getLS1BIndex(pos.getBitboards()[PieceType.WKING.getKey()])
 						: BitUtil.getLS1BIndex(pos.getBitboards()[PieceType.BKING.getKey()]),
 				pos.getTurn() == Piece.WHITE ? Piece.BLACK : Piece.WHITE, pos.getBitboards(), pos.getOccupancies());
 

@@ -10,18 +10,25 @@ import chess.Position;
 import chess.UndoInfo;
 import engine.MoveGenerator;
 import engine.MoveGenerator.MoveList;
+import event.ChessEvent;
+import event.ChessEventListener;
 import event.ChessEventManager;
 import event.ChessEventType;
+import event.ComputerMoveEvent;
 import event.PawnPromotionEvent;
 import gui.ChessBoardPainter;
 import util.BoardUtil;
 
-public class GameManager {
+// Receive notifications from both players and call the player do move method
+public class GameManager implements ChessEventListener {
 
 	// TODO Add support for player vs. player and player vs. computer
-	private ChessEventManager chessEventManager;
+	private Player whitePlayer;
+	private Player blackPlayer;
 
-	private int playerColor;
+	private Thread computerThread;
+
+	private ChessEventManager chessEventManager;
 
 	private MoveLog moveLog;
 
@@ -29,14 +36,41 @@ public class GameManager {
 	private int selectedSquare;
 	private int activeSquare;
 
-	public GameManager(GameMode gameMode, int playerColor) {
-		this.playerColor = Piece.WHITE;
-		chessEventManager = new ChessEventManager(ChessEventType.PAWN_PROMOTION);
+	public GameManager(Player whitePlayer, Player blackPlayer) {
+		this.whitePlayer = whitePlayer;
+		this.blackPlayer = blackPlayer;
+		chessEventManager = new ChessEventManager(ChessEventType.PAWN_PROMOTION, ChessEventType.COMPUTER_MOVE);
+		// listen to events from the computer
+		if (this.whitePlayer instanceof ComputerPlayer whiteComputerPlayer) {
+			whiteComputerPlayer.getChessEventManager().subscribe(this, ChessEventType.COMPUTER_MOVE);
+		} else if (this.blackPlayer instanceof ComputerPlayer blackComputerPlayer) {
+			blackComputerPlayer.getChessEventManager().subscribe(this, ChessEventType.COMPUTER_MOVE);
+		}
 		moveLog = new MoveLog();
 		position = new Position();
 		position.setPosition(Position.START_POSITION);
 		selectedSquare = -1;
 		activeSquare = -1;
+	}
+
+	public void addSubscriber(ChessEventListener listener, ChessEventType... operations) {
+		chessEventManager.subscribe(listener, operations);
+		if (this.whitePlayer instanceof ComputerPlayer whiteComputerPlayer) {
+			whiteComputerPlayer.getChessEventManager().subscribe(listener, ChessEventType.COMPUTER_MOVE);
+		} else if (this.blackPlayer instanceof ComputerPlayer blackComputerPlayer) {
+			blackComputerPlayer.getChessEventManager().subscribe(listener, ChessEventType.COMPUTER_MOVE);
+		}
+	}
+
+	public boolean isHumanTurn() {
+		return position.getTurn() == Piece.WHITE ? whitePlayer.isHuman() : blackPlayer.isHuman();
+	}
+
+	private ComputerPlayer getComputerPlayer(int turn) {
+		if (turn == Piece.WHITE) {
+			return (ComputerPlayer) whitePlayer;
+		}
+		return (ComputerPlayer) blackPlayer;
 	}
 
 	public MoveLog getMoveLog() {
@@ -61,6 +95,28 @@ public class GameManager {
 
 	public ChessEventManager getChessEventManager() {
 		return chessEventManager;
+	}
+
+	public void startComputerThinking() {
+		ComputerPlayer computerPlayer = getComputerPlayer(position.getTurn());
+		Runnable run = () -> {
+			computerPlayer.findMove(new Position(position));
+
+			stopComputerThinking();
+		};
+		computerThread = new Thread(run);
+		computerThread.start();
+	}
+
+	public void stopComputerThinking() {
+		if (computerThread != null) {
+			try {
+				computerThread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			computerThread = null;
+		}
 	}
 
 	public void mousePressed(MouseEvent e, int square) {
@@ -126,15 +182,20 @@ public class GameManager {
 		if (Move.getPromotedPiece(move) != 0) {
 			// Pawn Promotion
 			position.setPiecePosition(activeSquare, fromRank, fromFile);
-			PawnPromotionEvent promotionEvent = new PawnPromotionEvent(to, playerColor);
-			chessEventManager.notify(ChessEventType.PAWN_PROMOTION, promotionEvent);
+			PawnPromotionEvent promotionEvent = new PawnPromotionEvent(to, position.getTurn());
+			chessEventManager.notify(promotionEvent);
 			PieceType promotedPiece = promotionEvent.getPromotedPiece();
-			move = Move.encodeNewPromotion(move, promotedPiece.getKey());
+			move = Move.updatePromotionFlag(move, promotedPiece.getKey());
 		}
 		// Move the piece
 		position.makeMove(move, ui);
 		moveLog.addMove(position, validMoves, move);
-		return MoveType.getMoveType(move, position.isInCheck());
+
+		if (!isHumanTurn()) {
+			System.out.println("STARTING COMPUTER THINKING");
+			startComputerThinking();
+		}
+		return MoveType.getMoveType(move, position.isInCheck()); // TODO Send to listeners
 	}
 
 	public void resetActivePiecePosition() {
@@ -151,6 +212,16 @@ public class GameManager {
 		}
 
 		return 0;
+	}
+
+	@Override
+	public void update(ChessEvent event) {
+		if (event instanceof ComputerMoveEvent computerMoveEvent) {
+			UndoInfo ui = new UndoInfo();
+			int move = computerMoveEvent.getMove();
+			moveLog.addMove(position, computerMoveEvent.getValidMoves(), move);
+			position.makeMove(move, ui);
+		}
 	}
 
 }

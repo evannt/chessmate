@@ -1,5 +1,7 @@
 package chess;
 
+import java.util.Arrays;
+
 import gui.ChessBoardPainter;
 import util.BitUtil;
 import util.BoardUtil;
@@ -21,7 +23,15 @@ public class Position {
 	private int epSquare;
 	private int castleRights;
 
-	private static final int[] CASTLE_RIGHTS_UPDATES = { 7, 15, 15, 15, 3, 15, 15, 11, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 13, 15, 15, 15, 12, 15, 15, 14, };
+	private static final int[] CASTLE_RIGHTS_UPDATES = {
+			7, 15, 15, 15, 3, 15, 15, 11,
+			15, 15, 15, 15, 15, 15, 15, 15,
+			15, 15, 15, 15, 15, 15, 15, 15,
+			15, 15, 15, 15, 15, 15, 15, 15,
+			15, 15, 15, 15, 15, 15, 15, 15,
+			15, 15, 15, 15, 15, 15, 15, 15,
+			15, 15, 15, 15, 15, 15, 15, 15,
+			13, 15, 15, 15, 12, 15, 15, 14, };
 
 	private int halfMoveClock;
 	private int fullMoveCount;
@@ -43,6 +53,18 @@ public class Position {
 		castleRights = 0;
 		halfMoveClock = 0;
 		fullMoveCount = 1;
+	}
+
+	public Position(Position position) {
+		this.pieces = Arrays.stream(position.pieces).map(piece -> piece == null ? null : new Piece(piece))
+				.toArray(Piece[]::new);
+		this.occupancies = position.occupancies;
+		this.bitboards = position.bitboards;
+		this.turn = position.turn;
+		this.epSquare = position.epSquare;
+		this.castleRights = position.castleRights;
+		this.halfMoveClock = position.halfMoveClock;
+		this.fullMoveCount = position.fullMoveCount;
 	}
 
 	public boolean makeMove(int move, UndoInfo undoInfo) {
@@ -92,20 +114,20 @@ public class Position {
 		}
 		if (castleFlag != 0) {
 			int key = turn == Piece.WHITE ? PieceType.WROOK.getKey() : PieceType.BROOK.getKey();
-			int rookSrcSq = turn == Piece.WHITE
-					? dst == BoardUtil.getSquareAsIndex("g1")
-							? BoardUtil.getSquareAsIndex("h1")
-							: BoardUtil.getSquareAsIndex("a1")
-					: dst == BoardUtil.getSquareAsIndex("g8")
-							? BoardUtil.getSquareAsIndex("h8")
-							: BoardUtil.getSquareAsIndex("a8");
-			int rookDstSq = turn == Piece.WHITE
-					? rookSrcSq == BoardUtil.getSquareAsIndex("h1")
-							? BoardUtil.getSquareAsIndex("f1")
-							: BoardUtil.getSquareAsIndex("d1")
-					: rookSrcSq == BoardUtil.getSquareAsIndex("h8")
-							? BoardUtil.getSquareAsIndex("f8")
-							: BoardUtil.getSquareAsIndex("d8");
+			int rookSrcSq = turn == Piece.WHITE ?
+					dst == BoardUtil.getSquareAsIndex("g1") ?
+							BoardUtil.getSquareAsIndex("h1") :
+							BoardUtil.getSquareAsIndex("a1") :
+					dst == BoardUtil.getSquareAsIndex("g8") ?
+							BoardUtil.getSquareAsIndex("h8") :
+							BoardUtil.getSquareAsIndex("a8");
+			int rookDstSq = turn == Piece.WHITE ?
+					rookSrcSq == BoardUtil.getSquareAsIndex("h1") ?
+							BoardUtil.getSquareAsIndex("f1") :
+							BoardUtil.getSquareAsIndex("d1") :
+					rookSrcSq == BoardUtil.getSquareAsIndex("h8") ?
+							BoardUtil.getSquareAsIndex("f8") :
+							BoardUtil.getSquareAsIndex("d8");
 
 			bitboards[key] = BitUtil.popBit(bitboards[key], rookSrcSq);
 			bitboards[key] = BitUtil.setBit(bitboards[key], rookDstSq);
@@ -117,9 +139,9 @@ public class Position {
 		updateOccupancies();
 
 		turn = (turn == Piece.WHITE ? Piece.BLACK : Piece.WHITE);
-		int kingSq = turn == Piece.WHITE
-				? BitUtil.getLS1BIndex(bitboards[PieceType.BKING.getKey()])
-				: BitUtil.getLS1BIndex(bitboards[PieceType.WKING.getKey()]);
+		int kingSq = turn == Piece.WHITE ?
+				BitUtil.getLS1BIndex(bitboards[PieceType.BKING.getKey()]) :
+				BitUtil.getLS1BIndex(bitboards[PieceType.WKING.getKey()]);
 		if (Bitboard.isSquareAttacked(kingSq, turn, bitboards, occupancies)) {
 			// restores previous position if the king was in check or check was unresolved
 			unMakeMove(move, undoInfo);
@@ -312,9 +334,9 @@ public class Position {
 	}
 
 	public boolean isInCheck() {
-		int kingSq = turn == Piece.WHITE
-				? BitUtil.getLS1BIndex(bitboards[PieceType.WKING.getKey()])
-				: BitUtil.getLS1BIndex(bitboards[PieceType.BKING.getKey()]);
+		int kingSq = turn == Piece.WHITE ?
+				BitUtil.getLS1BIndex(bitboards[PieceType.WKING.getKey()]) :
+				BitUtil.getLS1BIndex(bitboards[PieceType.BKING.getKey()]);
 		int opponent = turn == Piece.WHITE ? Piece.BLACK : Piece.WHITE;
 		return (Bitboard.isSquareAttacked(kingSq, opponent, bitboards, occupancies));
 	}

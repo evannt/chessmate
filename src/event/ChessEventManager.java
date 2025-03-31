@@ -27,10 +27,10 @@ public class ChessEventManager {
 		currentListeners.remove(listener);
 	}
 
-	public void notify(ChessEventType eventType, ChessEvent event) {
-		List<ChessEventListener> currentListeners = listeners.get(eventType);
+	public void notify(ChessEvent event) {
+		List<ChessEventListener> currentListeners = listeners.get(event.getType());
 		for (ChessEventListener listener : currentListeners) {
-			listener.update(eventType, event);
+			listener.update(event);
 		}
 	}
 

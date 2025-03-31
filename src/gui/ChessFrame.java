@@ -16,7 +16,7 @@ public class ChessFrame extends JFrame {
 	public static final Color DARK_GRAY = new Color(47, 47, 47);
 	public static final Color LIGHT_GRAY = new Color(85, 85, 85);
 	public static final Color DARK_GREEN = new Color(24, 28, 20);
-	public static final Color DARK_GREEN_ALT = new Color(44, 48, 40);
+	public static final Color DARK_GREEN_ALT = new Color(64, 68, 60);
 	public static final Color MID_GREEN = new Color(60, 61, 55);
 	public static final Color LIGHT_GREEN = new Color(105, 117, 101);
 	public static final Color LIGHT_GREEN_ALT = new Color(145, 157, 141);
