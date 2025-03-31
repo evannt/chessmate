@@ -12,7 +12,6 @@ import chess.PieceType;
 import chess.Position;
 import event.ChessEvent;
 import event.ChessEventListener;
-import event.ChessEventType;
 import event.PawnPromotionEvent;
 import ui.PawnPromotionPrompt;
 import util.BoardUtil;
@@ -120,13 +119,12 @@ public class ChessBoardPainter implements ChessEventListener {
 	}
 
 	@Override
-	public void update(ChessEventType eventType, ChessEvent event) {
+	public void update(ChessEvent event) {
 		if (event instanceof PawnPromotionEvent promotionEvent) {
 			int color = promotionEvent.getColor();
 			int square = promotionEvent.getTargetSquare();
 			promotionEvent.setPromotionResponse(drawPiecePromotionPrompt(color, square));
 		}
-
 	}
 
 }

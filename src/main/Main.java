@@ -33,7 +33,8 @@ public class Main {
 		position.setPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R3KBNR w KQkq - 0 1");
 		position.drawBoard();
 		System.out.println(Evaluator.evaluate(position));
-		Searcher searcher = new Searcher(position);
+		Searcher searcher = new Searcher();
+		searcher.setPosition(position);
 		searcher.search(1);
 
 		MoveList moves = MoveGenerator.generateAllMoves(position);

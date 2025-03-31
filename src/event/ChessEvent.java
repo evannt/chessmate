@@ -1,15 +1,7 @@
 package event;
 
-public abstract class ChessEvent {
+public interface ChessEvent {
 
-	private int targetSquare;
-
-	public ChessEvent(int targetSquare) {
-		this.targetSquare = targetSquare;
-	}
-
-	public int getTargetSquare() {
-		return targetSquare;
-	}
+	public ChessEventType getType();
 
 }

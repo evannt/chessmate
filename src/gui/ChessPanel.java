@@ -10,15 +10,21 @@ import java.awt.event.MouseMotionAdapter;
 
 import javax.swing.JPanel;
 
+import chess.Piece;
+import event.ChessEvent;
+import event.ChessEventListener;
 import event.ChessEventType;
+import event.ComputerMoveEvent;
+import game.ComputerPlayer;
 import game.GameManager;
 import game.GameMode;
+import game.HumanPlayer;
 import game.MoveType;
 import ui.SoundManager;
 import ui.UI;
 import util.BoardUtil;
 
-public class ChessPanel extends JPanel {
+public class ChessPanel extends JPanel implements ChessEventListener {
 
 	private static final long serialVersionUID = -2612936424651279335L;
 
@@ -58,12 +64,18 @@ public class ChessPanel extends JPanel {
 		setVisible(true);
 	}
 
-	public void setupGame(GameMode gameMode, int playerColor) {
+	public void setupGame(GameMode gameMode, int selectedColor) {
 		userInterface = new UI();
 		soundManager = new SoundManager();
-		gameManager = new GameManager(gameMode, playerColor);
+		gameManager = switch (gameMode) {
+		case PLAY_BOT -> selectedColor == Piece.WHITE ?
+				new GameManager(new HumanPlayer(), new ComputerPlayer()) :
+				new GameManager(new ComputerPlayer(), new HumanPlayer());
+		case PLAY_FRIEND -> new GameManager(new HumanPlayer(), new HumanPlayer());
+		};
 		chessBoardPainter = new ChessBoardPainter(this);
-		gameManager.getChessEventManager().subscribe(chessBoardPainter, ChessEventType.values());
+		gameManager.addSubscriber(chessBoardPainter, ChessEventType.values());
+		gameManager.addSubscriber(this, ChessEventType.values());
 		add(userInterface.moveLogPane);
 	}
 
@@ -75,9 +87,10 @@ public class ChessPanel extends JPanel {
 			gameManager.setSelectedSquare(-1);
 			return;
 		} else {
-			int square = BoardUtil.getIndexFromCoordinate(rank, file);
-
-			gameManager.mousePressed(e, square);
+			if (gameManager.isHumanTurn()) {
+				int square = BoardUtil.getIndexFromCoordinate(rank, file);
+				gameManager.mousePressed(e, square);
+			}
 		}
 		repaint();
 	}
@@ -90,16 +103,20 @@ public class ChessPanel extends JPanel {
 			gameManager.setSelectedSquare(-1);
 			return;
 		} else {
-			int square = BoardUtil.getIndexFromCoordinate(rank, file);
+			if (gameManager.isHumanTurn()) {
+				int square = BoardUtil.getIndexFromCoordinate(rank, file);
 
-			MoveType moveType = gameManager.mouseReleased(e, square);
-			soundManager.playSound(moveType.getSoundKey());
+				MoveType moveType = gameManager.mouseReleased(e, square);
+				soundManager.playSound(moveType.getSoundKey());
+			}
 		}
 		repaint();
 	}
 
 	public void chessPanelMouseDragged(MouseEvent e) {
-		gameManager.mouseDragged(e);
+		if (gameManager.isHumanTurn()) {
+			gameManager.mouseDragged(e);
+		}
 		repaint();
 	}
 
@@ -119,6 +136,16 @@ public class ChessPanel extends JPanel {
 		userInterface.updateMoveLog(gameManager.getMoveLog());
 
 		graphics2D.dispose();
+	}
+
+	@Override
+	public void update(ChessEvent event) {
+		if (event instanceof ComputerMoveEvent computerMove) {
+			// highlight from and to square
+			System.out.println("CHESS PANEL UPDATE");
+			soundManager.playSound(computerMove.getMoveType().getSoundKey());
+			repaint();
+		}
 	}
 
 }
