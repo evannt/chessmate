@@ -14,6 +14,7 @@ public class ChessFrame extends JFrame {
 	private static final long serialVersionUID = -2536492765344084132L;
 
 	public static final Color DARK_GRAY = new Color(47, 47, 47);
+	public static final Color DARK_GRAY_ALT = new Color(65, 65, 65);
 	public static final Color LIGHT_GRAY = new Color(85, 85, 85);
 	public static final Color DARK_GREEN = new Color(24, 28, 20);
 	public static final Color DARK_GREEN_ALT = new Color(64, 68, 60);

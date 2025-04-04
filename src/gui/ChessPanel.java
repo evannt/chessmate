@@ -108,6 +108,7 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 
 				MoveType moveType = gameManager.mouseReleased(e, square);
 				soundManager.playSound(moveType.getSoundKey());
+				userInterface.updateMoveLog(gameManager.getMoveLog());
 			}
 		}
 		repaint();
@@ -133,7 +134,6 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 		chessBoardPainter.drawBoard(graphics2D);
 		chessBoardPainter.highlightSelectedSquare(graphics2D, gameManager.getSelectedSquare());
 		chessBoardPainter.drawPieces(graphics2D, gameManager.getPosition());
-		userInterface.updateMoveLog(gameManager.getMoveLog());
 
 		graphics2D.dispose();
 	}
@@ -144,6 +144,7 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 			// highlight from and to square
 			System.out.println("CHESS PANEL UPDATE");
 			soundManager.playSound(computerMove.getMoveType().getSoundKey());
+			userInterface.updateMoveLog(gameManager.getMoveLog());
 			repaint();
 		}
 	}
