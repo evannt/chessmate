@@ -12,13 +12,26 @@ This project is a chess engine that can be used to play, practice, and improve y
 * FEN Notation support
 * Algebraic notation for moves
 
-## :tv: Demo 
+## :tv: Demo
 
 Coming soon...
 
 ## :inbox_tray: Installation and Instructions
 
-Coming soon...
+### Clone the repository
+``` bash
+git clone https://github.com/evannt/Chessmate.git
+```
+
+### Compile and Run
+
+``` bash
+# Bash
+javac -d ./bin src/**/*.java
+java -cp ./bin main.Main
+```
+
+
 
 ## :clipboard: Additional Details
 
