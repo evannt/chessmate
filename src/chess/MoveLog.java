@@ -14,6 +14,9 @@ public class MoveLog {
 
 	// TODO Add End of Game
 
+	private static final String GRAY_HEX = "#656565";
+	private static final String LIGHT_GRAY_HEX = "#555555";
+
 	private List<Integer> moves;
 	private List<String> algebraicMoves;
 
@@ -33,21 +36,24 @@ public class MoveLog {
 	}
 
 	public String getLog() {
-		// TODO Refactor to build a table
 		StringBuffer sb = new StringBuffer();
-		sb.append("<html><body><pre>");
-		for (int i = 0; i < algebraicMoves.size(); i++) {
+		int moveCount = algebraicMoves.size();
+		String rowColor = GRAY_HEX;
+		sb.append("<html>");
+		sb.append("<body>");
+		sb.append("<table cellpadding='2' cellspacing='0' style='width: 100%; border-collapse: collapse;'>");
+		for (int i = 0; i < moveCount; i++) {
 			if ((i + 1) % 2 == 0) {
-				sb.append("     ");
-				sb.append(algebraicMoves.get(i));
-				sb.append("<br>");
+				sb.append("<td>").append(algebraicMoves.get(i)).append("</td></tr>"); // Black move
+				rowColor = rowColor == GRAY_HEX ? LIGHT_GRAY_HEX : GRAY_HEX;
 			} else {
-				sb.append(" <b>").append((i + 1) / 2 + 1).append("</b>");
-				sb.append(".    ");
-				sb.append(algebraicMoves.get(i));
+				sb.append("<tr").append(" style='background-color:").append(rowColor).append(";'>");
+				sb.append("<td style='padding-left: 10;'><b>").append((i + 1) / 2 + 1).append(".</b></td>"); // Number
+				sb.append("<td>").append(algebraicMoves.get(i)).append("</td>"); // White move
 			}
 		}
-		sb.append("</pre></body></html>");
+		sb.append(moveCount % 2 == 1 ? "<td>&nbsp;&nbsp;</td></tr>" : "");
+		sb.append("</table></body></html>");
 		return sb.toString();
 	}
 
