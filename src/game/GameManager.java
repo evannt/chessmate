@@ -124,6 +124,11 @@ public class GameManager implements ChessEventListener {
 			if (position.hasPiece(square)) {
 				setSelectedSquare(square);
 			}
+		} else {
+			if (position.hasPiece(square)) {
+				setSelectedSquare(square);
+				setActiveSquare(-1);
+			}
 		}
 	}
 
@@ -139,20 +144,13 @@ public class GameManager implements ChessEventListener {
 				position.setPiecePosition(square, square);
 			}
 		} else if (selectedSquare != square && activeSquare != -1) { // Dragging move
-			if (position.hasPiece(square)) {
-				resetActivePiecePosition();
-				setSelectedSquare(-1);
-				setActiveSquare(-1);
-				moveType = MoveType.INVALID;
-			} else {
-				moveType = movePiece(selectedSquare, square);
-				setSelectedSquare(-1);
-				setActiveSquare(-1);
-			}
+			moveType = movePiece(selectedSquare, square);
+			setSelectedSquare(-1);
+			setActiveSquare(-1);
 		}
 
-		position.drawPieces();
-		System.out.println(position.getFenString());
+//		position.drawPieces();
+//		System.out.println(position.getFenString());
 		return moveType;
 	}
 
