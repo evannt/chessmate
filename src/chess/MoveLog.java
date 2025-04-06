@@ -30,6 +30,11 @@ public class MoveLog {
 		algebraicMoves.add(getAlgebraicNotation(position, validMoves, move));
 	}
 
+	public int getLastMove() {
+		int moveIndex = moves.size() - 1;
+		return moveIndex < 0 ? -1 : moves.get(moveIndex);
+	}
+
 	public void removeLastMove() {
 		moves.remove(moves.size() - 1);
 		algebraicMoves.remove(algebraicMoves.size() - 1);
