@@ -133,6 +133,7 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 		chessBoardPainter.drawBorder(graphics2D);
 		chessBoardPainter.drawBoard(graphics2D);
 		chessBoardPainter.highlightSelectedSquare(graphics2D, gameManager.getSelectedSquare());
+		chessBoardPainter.highlightMove(graphics2D, gameManager.getMoveLog().getLastMove());
 		chessBoardPainter.drawPieces(graphics2D, gameManager.getPosition());
 
 		graphics2D.dispose();
@@ -141,8 +142,6 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 	@Override
 	public void update(ChessEvent event) {
 		if (event instanceof ComputerMoveEvent computerMove) {
-			// highlight from and to square
-			System.out.println("CHESS PANEL UPDATE");
 			soundManager.playSound(computerMove.getMoveType().getSoundKey());
 			userInterface.updateMoveLog(gameManager.getMoveLog());
 			repaint();

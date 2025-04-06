@@ -7,6 +7,7 @@ import java.awt.Point;
 
 import javax.swing.SwingUtilities;
 
+import chess.Move;
 import chess.Piece;
 import chess.PieceType;
 import chess.Position;
@@ -42,6 +43,7 @@ public class ChessBoardPainter implements ChessEventListener {
 	public static final Color UI_COLOR = Color.gray;
 	public static final Color TAN = new Color(238, 238, 210);
 	public static final Color GREEN = new Color(118, 150, 86);
+	public static final Color HIGHLIGHT = new Color(255, 255, 0, 92);
 	public static final Font ARIAL_11 = new Font("Arial", Font.BOLD, 11);
 
 	// TODO Add different drawing for Player vs Computer when player picks black
@@ -113,8 +115,23 @@ public class ChessBoardPainter implements ChessEventListener {
 			int file = BoardUtil.getFileFromIndex(selectedSquare);
 			int x = (file + START_FILE) * TILE_SIZE;
 			int y = (rank + START_RANK) * TILE_SIZE;
-			graphics2D.setColor(new Color(255, 255, 0, 92));
+			graphics2D.setColor(HIGHLIGHT);
 			graphics2D.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+		}
+	}
+
+	public void highlightMove(Graphics2D graphics2D, int move) {
+		if (move != -1) {
+			int src = Move.getSrc(move);
+			int srcX = (BoardUtil.getFileFromIndex(src) + START_FILE) * TILE_SIZE;
+			int srcY = (BoardUtil.getRankFromIndex(src) + START_RANK) * TILE_SIZE;
+			graphics2D.setColor(HIGHLIGHT);
+			graphics2D.fillRect(srcX, srcY, TILE_SIZE, TILE_SIZE);
+			int dst = Move.getDst(move);
+			int dstX = (BoardUtil.getFileFromIndex(dst) + START_FILE) * TILE_SIZE;
+			int dstY = (BoardUtil.getRankFromIndex(dst) + START_RANK) * TILE_SIZE;
+			graphics2D.setColor(HIGHLIGHT);
+			graphics2D.fillRect(dstX, dstY, TILE_SIZE, TILE_SIZE);
 		}
 	}
 
