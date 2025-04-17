@@ -14,7 +14,8 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 public class SoundManager {
 
 	private static final String SOUND_PATH = "resc/sounds/";
-	private static final String[] SOUND_FILES = { "move-self.wav", "capture.wav", "move-check.wav", "castle.wav", "promote.wav", "notify.wav" };
+	private static final String[] SOUND_FILES = { "game-start.wav", "game-end.wav", "tenseconds.wav", "move-self.wav",
+			"capture.wav", "move-check.wav", "castle.wav", "promote.wav", "notify.wav" };
 
 	private Map<String, Clip> sounds;
 

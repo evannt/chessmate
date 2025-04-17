@@ -2,14 +2,14 @@ package game;
 
 import chess.Move;
 
-public enum MoveType {
+public enum SoundType {
 
 	NONE(""), NORMAL("move-self"), CAPTURE("capture"), CASTLE("castle"), PROMOTION("promote"), CHECK("move-check"),
-	INVALID("notify");
+	GAME_START("game-start"), GAME_END("game-end"), INVALID("notify");
 
 	private String soundKey;
 
-	private MoveType(String soundKey) {
+	private SoundType(String soundKey) {
 		this.soundKey = soundKey;
 	}
 
@@ -17,7 +17,7 @@ public enum MoveType {
 		return soundKey;
 	}
 
-	public static MoveType getMoveType(int move, boolean isCheckMove) {
+	public static SoundType fromMove(int move, boolean isCheckMove) {
 		if (isCheckMove) {
 			return CHECK;
 		}

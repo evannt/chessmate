@@ -1,7 +1,11 @@
 package ui;
 
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -22,10 +26,30 @@ public class UI {
 	private static final int MOVE_LOG_WIDTH = 3 * ChessBoardPainter.TILE_SIZE;
 	private static final int MOVE_LOG_HEIGHT = 7 * ChessBoardPainter.TILE_SIZE;
 
+	private static final Font BUTTON_FONT = new Font("Georgia", Font.BOLD, 14);
+	private static final int BUTTON_WIDTH = 120;
+	private static final int BUTTON_HEIGHT = 30;
+
+	private static final int REMATCH_BUTTON_X = (11 * ChessBoardPainter.TILE_SIZE) - (15);
+	private static final int REMATCH_BUTTON_Y = ChessBoardPainter.START_RANK * ChessBoardPainter.TILE_SIZE
+			+ (7 * ChessBoardPainter.TILE_SIZE + ChessBoardPainter.TILE_SIZE / 2);
+	private static final int NEW_GAME_BUTTON_X = REMATCH_BUTTON_X + BUTTON_WIDTH
+			+ (BUTTON_HEIGHT);
+	private static final int NEW_GAME_BUTTON_Y = ChessBoardPainter.START_RANK * ChessBoardPainter.TILE_SIZE
+			+ (7 * ChessBoardPainter.TILE_SIZE + ChessBoardPainter.TILE_SIZE / 2);
+
+	public JButton rematchButton;
+	public JButton newGameButton;
+
 	public JScrollPane moveLogPane;
 	public JTextPane moveLogDisplay;
 
 	public UI() {
+		rematchButton = createUIButton("Rematch");
+		newGameButton = createUIButton("New Game");
+		rematchButton.setBounds(REMATCH_BUTTON_X, REMATCH_BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT);
+		newGameButton.setBounds(NEW_GAME_BUTTON_X, NEW_GAME_BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT);
+
 		moveLogDisplay = new JTextPane();
 		moveLogDisplay.setContentType("text/html");
 		moveLogDisplay.setEditable(false);
@@ -80,6 +104,30 @@ public class UI {
 
 	public void updateMoveLog(MoveLog moveLog) {
 		moveLogDisplay.setText(moveLog.getLog());
+	}
+
+	private JButton createUIButton(String text) {
+		JButton button = new JButton(text);
+		button.setFont(BUTTON_FONT);
+		button.setForeground(ChessFrame.DARK_GRAY);
+		button.setBackground(ChessFrame.LIGHT_GRAY);
+		button.setFocusPainted(false);
+		button.setBorderPainted(false);
+		button.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+		button.setMaximumSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
+
+		button.addMouseListener(new MouseAdapter() {
+			public void mouseEntered(MouseEvent evt) {
+				button.setBackground(ChessFrame.DARK_GRAY_ALT);
+			}
+
+			public void mouseExited(MouseEvent evt) {
+				button.setBackground(ChessFrame.LIGHT_GRAY);
+			}
+		});
+
+		return button;
 	}
 
 }

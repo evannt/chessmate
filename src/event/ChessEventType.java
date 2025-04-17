@@ -1,8 +1,7 @@
 package event;
 
 public enum ChessEventType {
-	// TODO Use event types to produce sounds after moves
 
-	PAWN_PROMOTION, COMPUTER_MOVE;
+	PAWN_PROMOTION, UPDATE_BOARD, COMPUTER_MOVE, GAME_RESULT;
 
 }

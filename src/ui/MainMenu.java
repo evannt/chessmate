@@ -64,14 +64,8 @@ public class MainMenu extends JPanel {
 		playFriendButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int playerColor = getPlayerColor();
-				System.out.println("Got Color: " + playerColor);
-				if (playerColor != Piece.WHITE && playerColor != Piece.BLACK) {
-					parent.switchPanel(ChessFrame.MAIN_MENU);
-				} else {
-					parent.startGame(GameMode.PLAY_FRIEND, playerColor);
-					parent.switchPanel(ChessFrame.CHESS_PANEL);
-				}
+				parent.startGame(GameMode.PLAY_FRIEND, Piece.WHITE);
+				parent.switchPanel(ChessFrame.CHESS_PANEL);
 			}
 		});
 

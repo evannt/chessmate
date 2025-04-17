@@ -38,7 +38,7 @@ public class ChessFrame extends JFrame {
 		setTitle("Chess");
 
 		mainMenu = new MainMenu(this);
-		chessPanel = new ChessPanel();
+		chessPanel = new ChessPanel(this);
 
 		cardLayout = new CardLayout();
 		panels = new JPanel(cardLayout);

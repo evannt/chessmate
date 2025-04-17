@@ -13,9 +13,10 @@ public class ComputerPlayer implements Player {
 	private Searcher searcher;
 	private ChessEventManager chessEventManager;
 
-	public ComputerPlayer() {
+	public ComputerPlayer(GameManager gameManager) {
 		searcher = new Searcher();
 		chessEventManager = new ChessEventManager(ChessEventType.COMPUTER_MOVE);
+		chessEventManager.subscribe(gameManager, ChessEventType.COMPUTER_MOVE);
 	}
 
 	public ChessEventManager getChessEventManager() {
@@ -30,10 +31,8 @@ public class ComputerPlayer implements Player {
 	public synchronized void findMove(Position position) {
 		MoveList validMoves = MoveGenerator.generateAllMoves(position).removeIllegalMoves(position);
 		searcher.setPosition(position);
-		int move = searcher.search(3);
-		MoveType moveType = MoveType.getMoveType(move, position.isInCheck());
-		System.out.println(moveType);
-		ComputerMoveEvent computerMoveEvent = new ComputerMoveEvent(move, moveType, validMoves);
+		int move = searcher.search(3); // Optimize before increasing depth
+		ComputerMoveEvent computerMoveEvent = new ComputerMoveEvent(move, validMoves);
 		chessEventManager.notify(computerMoveEvent);
 	}
 

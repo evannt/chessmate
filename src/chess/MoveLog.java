@@ -8,11 +8,7 @@ import util.BoardUtil;
 
 public class MoveLog {
 
-	// TODO Add Checkmate
-
 	// TODO Add Draw offer
-
-	// TODO Add End of Game
 
 	private static final String GRAY_HEX = "#656565";
 	private static final String LIGHT_GRAY_HEX = "#555555";
@@ -25,9 +21,9 @@ public class MoveLog {
 		algebraicMoves = new ArrayList<>();
 	}
 
-	public void addMove(Position position, MoveList validMoves, int move) {
+	public void addMove(Position position, MoveList validMoves, int move, boolean isCheckmate) {
 		moves.add(move);
-		algebraicMoves.add(getAlgebraicNotation(position, validMoves, move));
+		algebraicMoves.add(getAlgebraicNotation(position, validMoves, move, isCheckmate));
 	}
 
 	public int getLastMove() {
@@ -62,9 +58,8 @@ public class MoveLog {
 		return sb.toString();
 	}
 
-	public static String getAlgebraicNotation(Position position, MoveList validMoves, int move) {
+	public static String getAlgebraicNotation(Position position, MoveList validMoves, int move, boolean isCheckmate) {
 		StringBuffer sb = new StringBuffer();
-		// TODO Pass a checkmate flag to add a # to this move if it causes checkmate
 		if (Move.getCastleFlag(move) != 0) {
 			int file = Move.getDst(move);
 			if (file == 6) {
@@ -115,7 +110,7 @@ public class MoveLog {
 			default -> "=" + promotionType.getId();
 			});
 		}
-		sb.append(position.isInCheck() ? "+" : "");
+		sb.append(isCheckmate ? "#" : position.isInCheck() ? "+" : "");
 
 		return sb.toString();
 	}
