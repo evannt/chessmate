@@ -10,16 +10,15 @@ import java.awt.event.MouseMotionAdapter;
 
 import javax.swing.JPanel;
 
-import chess.Piece;
 import event.ChessEvent;
 import event.ChessEventListener;
 import event.ChessEventType;
-import event.ComputerMoveEvent;
-import game.ComputerPlayer;
+import event.GameResultEvent;
+import event.UpdateBoardEvent;
 import game.GameManager;
 import game.GameMode;
-import game.HumanPlayer;
-import game.MoveType;
+import game.SoundType;
+import ui.GameResultIndicator;
 import ui.SoundManager;
 import ui.UI;
 import util.BoardUtil;
@@ -31,12 +30,15 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 	public static final int SCREEN_WIDTH = ChessBoardPainter.TILE_SIZE * 15;
 	public static final int SCREEN_HEIGHT = ChessBoardPainter.TILE_SIZE * 11;
 
+	private ChessFrame parent;
+
 	private UI userInterface;
 	private SoundManager soundManager;
 	private GameManager gameManager;
 	private ChessBoardPainter chessBoardPainter;
 
-	public ChessPanel() {
+	public ChessPanel(ChessFrame parent) {
+		this.parent = parent;
 		setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
 		setDoubleBuffered(true); // improve game rendering performance
 		setFocusable(true);
@@ -64,30 +66,42 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 		setVisible(true);
 	}
 
+	public ChessFrame getFrame() {
+		return parent;
+	}
+
 	public void setupGame(GameMode gameMode, int selectedColor) {
+		removeAll();
+		revalidate();
 		userInterface = new UI();
 		soundManager = new SoundManager();
-		gameManager = switch (gameMode) {
-		case PLAY_BOT -> selectedColor == Piece.WHITE ?
-				new GameManager(new HumanPlayer(), new ComputerPlayer()) :
-				new GameManager(new ComputerPlayer(), new HumanPlayer());
-		case PLAY_FRIEND -> new GameManager(new HumanPlayer(), new HumanPlayer());
-		};
+
+		gameManager = new GameManager(gameMode, selectedColor);
+		userInterface.updateMoveLog(gameManager.getMoveLog());
 		chessBoardPainter = new ChessBoardPainter(this);
 		gameManager.addSubscriber(chessBoardPainter, ChessEventType.values());
 		gameManager.addSubscriber(this, ChessEventType.values());
 		add(userInterface.moveLogPane);
+		soundManager.playSound(SoundType.GAME_START.getSoundKey());
+	}
+
+	public void restartGame() {
+		removeAll();
+		gameManager.restartGame();
+		add(userInterface.moveLogPane);
+		userInterface.updateMoveLog(gameManager.getMoveLog());
+		repaint();
+		soundManager.playSound(SoundType.GAME_START.getSoundKey());
 	}
 
 	public void chessPanelMousePressed(MouseEvent e) {
 		int rank = (e.getY() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_RANK;
 		int file = (e.getX() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_FILE;
 		if (rank < 0 || rank > 7 || file < 0 || file > 7) {
-			// TODO Handle ui presses
 			gameManager.setSelectedSquare(-1);
 			return;
 		} else {
-			if (gameManager.isHumanTurn()) {
+			if (gameManager.isGameOngoing() && gameManager.isHumanTurn()) {
 				int square = BoardUtil.getIndexFromCoordinate(rank, file);
 				gameManager.mousePressed(e, square);
 			}
@@ -103,19 +117,17 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 			gameManager.setSelectedSquare(-1);
 			return;
 		} else {
-			if (gameManager.isHumanTurn()) {
+			if (gameManager.isGameOngoing() && gameManager.isHumanTurn()) {
 				int square = BoardUtil.getIndexFromCoordinate(rank, file);
 
-				MoveType moveType = gameManager.mouseReleased(e, square);
-				soundManager.playSound(moveType.getSoundKey());
-				userInterface.updateMoveLog(gameManager.getMoveLog());
+				gameManager.mouseReleased(e, square);
 			}
 		}
 		repaint();
 	}
 
 	public void chessPanelMouseDragged(MouseEvent e) {
-		if (gameManager.isHumanTurn()) {
+		if (gameManager.isGameOngoing() && gameManager.isHumanTurn()) {
 			gameManager.mouseDragged(e);
 		}
 		repaint();
@@ -141,10 +153,35 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 
 	@Override
 	public void update(ChessEvent event) {
-		if (event instanceof ComputerMoveEvent computerMove) {
-			soundManager.playSound(computerMove.getMoveType().getSoundKey());
+		if (event instanceof UpdateBoardEvent boardUpdate) {
+			soundManager.playSound(boardUpdate.getMoveType().getSoundKey());
 			userInterface.updateMoveLog(gameManager.getMoveLog());
 			repaint();
+		} else if (event instanceof GameResultEvent gameResult) {
+			soundManager.playSound(SoundType.GAME_END.getSoundKey());
+			repaint();
+			GameResultIndicator gameResultIndicator = new GameResultIndicator(gameResult, this);
+			switch (gameResultIndicator.getResultChoice()) {
+			case RESTART_GAME:
+				restartGame();
+				break;
+			case NEW_GAME:
+				parent.switchPanel(ChessFrame.MAIN_MENU);
+				break;
+			case NONE:
+				userInterface.rematchButton.addActionListener((e) -> {
+					restartGame();
+				});
+				userInterface.newGameButton.addActionListener((e) -> {
+					parent.switchPanel(ChessFrame.MAIN_MENU);
+				});
+				add(userInterface.rematchButton);
+				add(userInterface.newGameButton);
+
+				revalidate();
+				repaint();
+				break;
+			}
 		}
 	}
 

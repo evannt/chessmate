@@ -15,14 +15,17 @@ import event.ChessEventListener;
 import event.ChessEventManager;
 import event.ChessEventType;
 import event.ComputerMoveEvent;
+import event.GameResultEvent;
 import event.PawnPromotionEvent;
+import event.UpdateBoardEvent;
 import gui.ChessBoardPainter;
 import util.BoardUtil;
 
-// Receive notifications from both players and call the player do move method
 public class GameManager implements ChessEventListener {
 
-	// TODO Add support for player vs. player and player vs. computer
+	private GameState gameState;
+
+	private GameMode gameMode;
 	private Player whitePlayer;
 	private Player blackPlayer;
 
@@ -36,30 +39,49 @@ public class GameManager implements ChessEventListener {
 	private int selectedSquare;
 	private int activeSquare;
 
-	public GameManager(Player whitePlayer, Player blackPlayer) {
-		this.whitePlayer = whitePlayer;
-		this.blackPlayer = blackPlayer;
-		chessEventManager = new ChessEventManager(ChessEventType.PAWN_PROMOTION, ChessEventType.COMPUTER_MOVE);
-		// listen to events from the computer
-		if (this.whitePlayer instanceof ComputerPlayer whiteComputerPlayer) {
-			whiteComputerPlayer.getChessEventManager().subscribe(this, ChessEventType.COMPUTER_MOVE);
-		} else if (this.blackPlayer instanceof ComputerPlayer blackComputerPlayer) {
-			blackComputerPlayer.getChessEventManager().subscribe(this, ChessEventType.COMPUTER_MOVE);
+	public GameManager(GameMode gameMode, int selectedColor) {
+		this.gameMode = gameMode;
+		switch (gameMode) {
+		case PLAY_BOT:
+			if (selectedColor == Piece.WHITE) {
+				whitePlayer = new HumanPlayer();
+				blackPlayer = new ComputerPlayer(this);
+
+			} else {
+				whitePlayer = new ComputerPlayer(this);
+				blackPlayer = new HumanPlayer();
+			}
+			break;
+		case PLAY_FRIEND:
+			whitePlayer = new HumanPlayer();
+			blackPlayer = new HumanPlayer();
+			break;
 		}
+
+		chessEventManager = new ChessEventManager(ChessEventType.values());
 		moveLog = new MoveLog();
 		position = new Position();
 		position.setPosition(Position.START_POSITION);
 		selectedSquare = -1;
 		activeSquare = -1;
+		gameState = GameState.ONGOING;
+	}
+
+	public void restartGame() {
+		moveLog = new MoveLog();
+		position = new Position();
+		position.setPosition(Position.START_POSITION);
+		selectedSquare = -1;
+		activeSquare = -1;
+		gameState = GameState.ONGOING;
 	}
 
 	public void addSubscriber(ChessEventListener listener, ChessEventType... operations) {
 		chessEventManager.subscribe(listener, operations);
-		if (this.whitePlayer instanceof ComputerPlayer whiteComputerPlayer) {
-			whiteComputerPlayer.getChessEventManager().subscribe(listener, ChessEventType.COMPUTER_MOVE);
-		} else if (this.blackPlayer instanceof ComputerPlayer blackComputerPlayer) {
-			blackComputerPlayer.getChessEventManager().subscribe(listener, ChessEventType.COMPUTER_MOVE);
-		}
+	}
+
+	public boolean isGameOngoing() {
+		return gameState == GameState.ONGOING;
 	}
 
 	public boolean isHumanTurn() {
@@ -97,6 +119,16 @@ public class GameManager implements ChessEventListener {
 		return chessEventManager;
 	}
 
+	public boolean isCheckmate() {
+		return position.isInCheck() &&
+				MoveGenerator.generateAllMoves(position).removeIllegalMoves(position).moveCount == 0;
+	}
+
+	public boolean isStalemate() {
+		return !position.isInCheck() &&
+				MoveGenerator.generateAllMoves(position).removeIllegalMoves(position).moveCount == 0;
+	}
+
 	public void startComputerThinking() {
 		ComputerPlayer computerPlayer = getComputerPlayer(position.getTurn());
 		Runnable run = () -> {
@@ -132,11 +164,10 @@ public class GameManager implements ChessEventListener {
 		}
 	}
 
-	public MoveType mouseReleased(MouseEvent e, int square) {
-		MoveType moveType = MoveType.NONE;
+	public void mouseReleased(MouseEvent e, int square) {
 		if (selectedSquare == square) {
 			if (activeSquare != square && activeSquare != -1) { // Clicking move
-				moveType = movePiece(activeSquare, square);
+				movePiece(activeSquare, square);
 				setSelectedSquare(-1);
 				setActiveSquare(-1);
 			} else {
@@ -144,14 +175,13 @@ public class GameManager implements ChessEventListener {
 				position.setPiecePosition(square, square);
 			}
 		} else if (selectedSquare != square && activeSquare != -1) { // Dragging move
-			moveType = movePiece(selectedSquare, square);
+			movePiece(selectedSquare, square);
 			setSelectedSquare(-1);
 			setActiveSquare(-1);
 		}
 
-//		position.drawPieces();
-//		System.out.println(position.getFenString());
-		return moveType;
+		position.drawPieces();
+		System.out.println(position.getFenString());
 	}
 
 	public void mouseDragged(MouseEvent e) {
@@ -165,7 +195,7 @@ public class GameManager implements ChessEventListener {
 		}
 	}
 
-	private MoveType movePiece(int from, int to) {
+	private void movePiece(int from, int to) {
 		MoveList validMoves = MoveGenerator.generateAllMoves(position).removeIllegalMoves(position);
 		int fromRank = BoardUtil.getRankFromIndex(from);
 		int fromFile = BoardUtil.getFileFromIndex(from);
@@ -175,25 +205,26 @@ public class GameManager implements ChessEventListener {
 		if (move == 0) {
 			// Reset location
 			position.setPiecePosition(activeSquare, fromRank, fromFile);
-			return MoveType.INVALID;
-		}
-		if (Move.getPromotedPiece(move) != 0) {
-			// Pawn Promotion
-			position.setPiecePosition(activeSquare, fromRank, fromFile);
-			PawnPromotionEvent promotionEvent = new PawnPromotionEvent(to, position.getTurn());
-			chessEventManager.notify(promotionEvent);
-			PieceType promotedPiece = promotionEvent.getPromotedPiece();
-			move = Move.updatePromotionFlag(move, promotedPiece.getKey());
-		}
-		// Move the piece
-		position.makeMove(move, ui);
-		moveLog.addMove(position, validMoves, move);
+			chessEventManager.notify(new UpdateBoardEvent(SoundType.INVALID));
+		} else {
+			if (Move.getPromotedPiece(move) != 0) {
+				// Pawn Promotion
+				position.setPiecePosition(activeSquare, fromRank, fromFile);
+				PawnPromotionEvent promotionEvent = new PawnPromotionEvent(to, position.getTurn());
+				chessEventManager.notify(promotionEvent);
+				PieceType promotedPiece = promotionEvent.getPromotedPiece();
+				move = Move.updatePromotionFlag(move, promotedPiece.getKey());
+			}
+			position.makeMove(move, ui);
+			updateGameState();
+			moveLog.addMove(position, validMoves, move, gameState == GameState.CHECKMATE);
+			chessEventManager.notify(new UpdateBoardEvent(SoundType.fromMove(move, position.isInCheck())));
+			checkGameState();
 
-		if (!isHumanTurn()) {
-			System.out.println("STARTING COMPUTER THINKING");
-			startComputerThinking();
+			if (gameState == GameState.ONGOING && !isHumanTurn()) {
+				startComputerThinking();
+			}
 		}
-		return MoveType.getMoveType(move, position.isInCheck()); // TODO Send to listeners
 	}
 
 	public void resetActivePiecePosition() {
@@ -217,8 +248,35 @@ public class GameManager implements ChessEventListener {
 		if (event instanceof ComputerMoveEvent computerMoveEvent) {
 			UndoInfo ui = new UndoInfo();
 			int move = computerMoveEvent.getMove();
-			moveLog.addMove(position, computerMoveEvent.getValidMoves(), move);
 			position.makeMove(move, ui);
+			updateGameState();
+			moveLog.addMove(position, computerMoveEvent.getValidMoves(), move, gameState == GameState.CHECKMATE);
+			chessEventManager.notify(new UpdateBoardEvent(SoundType.fromMove(move, position.isInCheck())));
+			checkGameState();
+		}
+	}
+
+	private void checkGameState() {
+		switch (gameState) {
+		case CHECKMATE:
+			int winner = position.getTurn() == Piece.WHITE ? Piece.BLACK : Piece.WHITE;
+			GameResultEvent checkmate = new GameResultEvent(gameState, gameMode, winner);
+			chessEventManager.notify(checkmate);
+			break;
+		case STALEMATE:
+			GameResultEvent stalemate = new GameResultEvent(gameState, gameMode, Piece.BOTH);
+			chessEventManager.notify(stalemate);
+			break;
+		default:
+			break;
+		}
+	}
+
+	private void updateGameState() {
+		if (isCheckmate()) {
+			gameState = GameState.CHECKMATE;
+		} else if (isStalemate()) {
+			gameState = GameState.STALEMATE;
 		}
 	}
 

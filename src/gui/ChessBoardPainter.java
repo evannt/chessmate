@@ -18,8 +18,6 @@ import ui.PawnPromotionPrompt;
 import util.BoardUtil;
 
 public class ChessBoardPainter implements ChessEventListener {
-	// TODO Add a custom listener to draw pawn promotion
-	// TODO Listen to the GameManager
 
 	// Chess square sizes and location
 	public static final int TILE_SIZE = 72;
@@ -45,9 +43,6 @@ public class ChessBoardPainter implements ChessEventListener {
 	public static final Color GREEN = new Color(118, 150, 86);
 	public static final Color HIGHLIGHT = new Color(255, 255, 0, 92);
 	public static final Font ARIAL_11 = new Font("Arial", Font.BOLD, 11);
-
-	// TODO Add different drawing for Player vs Computer when player picks black
-	// pieces
 
 	private ChessPanel chessPanel;
 
