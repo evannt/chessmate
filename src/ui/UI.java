@@ -1,5 +1,7 @@
 package ui;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -10,41 +12,79 @@ import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 
 import chess.MoveLog;
+import chess.Piece;
 import gui.ChessBoardPainter;
 import gui.ChessFrame;
 
 public class UI {
+	private static final Font BUTTON_FONT = new Font("Georgia", Font.BOLD, 14);
+	private static final int SMALL_BUTTON_WIDTH = 50;
+	private static final int SMALL_BUTTON_HEIGHT = 30;
+	private static final int BUTTON_WIDTH = 120;
+	private static final int BUTTON_HEIGHT = 30;
+	private static final int TURN_INDICATOR_WIDTH = 75;
+	private static final int TURN_INDICATOR_HEIGHT = 90;
 
 	private static final int MOVE_LOG_X = 11 * ChessBoardPainter.TILE_SIZE;
 	private static final int MOVE_LOG_Y = ChessBoardPainter.START_RANK * ChessBoardPainter.TILE_SIZE;
 	private static final int MOVE_LOG_WIDTH = 3 * ChessBoardPainter.TILE_SIZE;
 	private static final int MOVE_LOG_HEIGHT = 7 * ChessBoardPainter.TILE_SIZE;
 
-	private static final Font BUTTON_FONT = new Font("Georgia", Font.BOLD, 14);
-	private static final int BUTTON_WIDTH = 120;
-	private static final int BUTTON_HEIGHT = 30;
+	private static final int TURN_INDICATOR_X = ChessBoardPainter.TILE_SIZE / 2;
+	private static final int TURN_INDICATOR_Y = 5 * ChessBoardPainter.TILE_SIZE;
+
+	private static final int UNDO_BUTTON_X = 11 * ChessBoardPainter.TILE_SIZE;
+	private static final int UNDO_BUTTON_Y = ChessBoardPainter.START_RANK * ChessBoardPainter.TILE_SIZE
+			+ (MOVE_LOG_HEIGHT + ChessBoardPainter.TILE_SIZE / 4);
+	private static final int REDO_BUTTON_X = MOVE_LOG_X + MOVE_LOG_WIDTH - SMALL_BUTTON_WIDTH;
+	private static final int REDO_BUTTON_Y = ChessBoardPainter.START_RANK * ChessBoardPainter.TILE_SIZE
+			+ (MOVE_LOG_HEIGHT + ChessBoardPainter.TILE_SIZE / 4);
 
 	private static final int REMATCH_BUTTON_X = (11 * ChessBoardPainter.TILE_SIZE) - (15);
 	private static final int REMATCH_BUTTON_Y = ChessBoardPainter.START_RANK * ChessBoardPainter.TILE_SIZE
-			+ (7 * ChessBoardPainter.TILE_SIZE + ChessBoardPainter.TILE_SIZE / 2);
+			+ (MOVE_LOG_HEIGHT + ChessBoardPainter.TILE_SIZE);
 	private static final int NEW_GAME_BUTTON_X = REMATCH_BUTTON_X + BUTTON_WIDTH
 			+ (BUTTON_HEIGHT);
 	private static final int NEW_GAME_BUTTON_Y = ChessBoardPainter.START_RANK * ChessBoardPainter.TILE_SIZE
-			+ (7 * ChessBoardPainter.TILE_SIZE + ChessBoardPainter.TILE_SIZE / 2);
+			+ (MOVE_LOG_HEIGHT + ChessBoardPainter.TILE_SIZE);
 
-	public JButton rematchButton;
-	public JButton newGameButton;
+	public final JPanel turnIndicatorDisplay;
+	public final JPanel turnIndicator;
+	public final JLabel turnText;
 
-	public JScrollPane moveLogPane;
-	public JTextPane moveLogDisplay;
+	public final JButton undoButton;
+	public final JButton redoButton;
+
+	public final JButton rematchButton;
+	public final JButton newGameButton;
+
+	public final JScrollPane moveLogPane;
+	public final JTextPane moveLogDisplay;
 
 	public UI() {
+		turnIndicatorDisplay = new JPanel(new BorderLayout(15, 10));
+		turnIndicator = new JPanel();
+		turnText = new JLabel();
+		turnText.setForeground(Color.WHITE);
+		turnIndicator.setToolTipText("Turn");
+		turnIndicatorDisplay.add(turnText, BorderLayout.NORTH);
+		turnIndicatorDisplay.add(turnIndicator, BorderLayout.CENTER);
+		turnIndicatorDisplay.setOpaque(false);
+		turnIndicatorDisplay.setBounds(TURN_INDICATOR_X, TURN_INDICATOR_Y, TURN_INDICATOR_WIDTH, TURN_INDICATOR_HEIGHT);
+
+		undoButton = createUIButton("<");
+		redoButton = createUIButton(">");
+		undoButton.setBounds(UNDO_BUTTON_X, UNDO_BUTTON_Y, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT);
+		redoButton.setBounds(REDO_BUTTON_X, REDO_BUTTON_Y, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT);
+
 		rematchButton = createUIButton("Rematch");
 		newGameButton = createUIButton("New Game");
 		rematchButton.setBounds(REMATCH_BUTTON_X, REMATCH_BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT);
@@ -106,6 +146,11 @@ public class UI {
 		moveLogDisplay.setText(moveLog.getLog());
 	}
 
+	public void updateTurnIndicator(int color) {
+		turnText.setText((color == Piece.WHITE ? "White's" : "Black's") + " Turn");
+		turnIndicator.setBackground(color == Piece.WHITE ? Color.white : Color.black);
+	}
+
 	private JButton createUIButton(String text) {
 		JButton button = new JButton(text);
 		button.setFont(BUTTON_FONT);
@@ -114,8 +159,6 @@ public class UI {
 		button.setFocusPainted(false);
 		button.setBorderPainted(false);
 		button.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-		button.setMaximumSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
 
 		button.addMouseListener(new MouseAdapter() {
 			public void mouseEntered(MouseEvent evt) {

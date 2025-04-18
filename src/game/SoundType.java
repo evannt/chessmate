@@ -4,7 +4,7 @@ import chess.Move;
 
 public enum SoundType {
 
-	NONE(""), NORMAL("move-self"), CAPTURE("capture"), CASTLE("castle"), PROMOTION("promote"), CHECK("move-check"),
+	NONE(""), NORMAL_MOVE("move-self"), CAPTURE("capture"), CASTLE("castle"), PROMOTION("promote"), CHECK("move-check"),
 	GAME_START("game-start"), GAME_END("game-end"), INVALID("notify");
 
 	private String soundKey;
@@ -31,7 +31,7 @@ public enum SoundType {
 			return CASTLE;
 		}
 
-		return NORMAL;
+		return NORMAL_MOVE;
 	}
 
 }

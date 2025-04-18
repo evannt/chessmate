@@ -77,21 +77,32 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 		soundManager = new SoundManager();
 
 		gameManager = new GameManager(gameMode, selectedColor);
-		userInterface.updateMoveLog(gameManager.getMoveLog());
 		chessBoardPainter = new ChessBoardPainter(this);
 		gameManager.addSubscriber(chessBoardPainter, ChessEventType.values());
 		gameManager.addSubscriber(this, ChessEventType.values());
-		add(userInterface.moveLogPane);
+		addUI();
+		userInterface.updateTurnIndicator(gameManager.getTurn());
 		soundManager.playSound(SoundType.GAME_START.getSoundKey());
 	}
 
 	public void restartGame() {
 		removeAll();
+		revalidate();
 		gameManager.restartGame();
-		add(userInterface.moveLogPane);
-		userInterface.updateMoveLog(gameManager.getMoveLog());
+		addUI();
 		repaint();
 		soundManager.playSound(SoundType.GAME_START.getSoundKey());
+	}
+
+	public void addUI() {
+		userInterface.undoButton.addActionListener((e) -> gameManager.undoMove());
+		userInterface.redoButton.addActionListener((e) -> gameManager.redoMove());
+		add(userInterface.turnIndicatorDisplay);
+		add(userInterface.undoButton);
+		add(userInterface.redoButton);
+		add(userInterface.moveLogPane);
+		userInterface.updateMoveLog(gameManager.getMoveLog());
+		userInterface.updateTurnIndicator(gameManager.getTurn());
 	}
 
 	public void chessPanelMousePressed(MouseEvent e) {
@@ -154,8 +165,9 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 	@Override
 	public void update(ChessEvent event) {
 		if (event instanceof UpdateBoardEvent boardUpdate) {
-			soundManager.playSound(boardUpdate.getMoveType().getSoundKey());
+			soundManager.playSound(boardUpdate.getSoundType().getSoundKey());
 			userInterface.updateMoveLog(gameManager.getMoveLog());
+			userInterface.updateTurnIndicator(gameManager.getTurn());
 			repaint();
 		} else if (event instanceof GameResultEvent gameResult) {
 			soundManager.playSound(SoundType.GAME_END.getSoundKey());
