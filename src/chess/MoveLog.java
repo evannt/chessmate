@@ -1,7 +1,7 @@
 package chess;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 import engine.MoveGenerator.MoveList;
 import util.BoardUtil;
@@ -13,44 +13,70 @@ public class MoveLog {
 	private static final String GRAY_HEX = "#656565";
 	private static final String LIGHT_GRAY_HEX = "#555555";
 
-	private List<Integer> moves;
-	private List<String> algebraicMoves;
+	private Deque<MoveInfo> moves;
+	private Deque<MoveInfo> undos;
 
 	public MoveLog() {
-		moves = new ArrayList<>();
-		algebraicMoves = new ArrayList<>();
+		moves = new ArrayDeque<>();
+		undos = new ArrayDeque<>();
 	}
 
-	public void addMove(Position position, MoveList validMoves, int move, boolean isCheckmate) {
-		moves.add(move);
-		algebraicMoves.add(getAlgebraicNotation(position, validMoves, move, isCheckmate));
+	public void addMove(Position position, MoveList validMoves, int move, UndoInfo undoInfo, boolean isCheckmate) {
+		if (hasUnMadeMove()) {
+			undos.clear();
+		}
+		moves.push(new MoveInfo(move, getAlgebraicNotation(position, validMoves, move, isCheckmate), undoInfo));
+	}
+
+	public boolean hasPreviousMove() {
+		return moves.size() != 0;
+	}
+
+	public boolean hasUnMadeMove() {
+		return undos.size() != 0;
 	}
 
 	public int getLastMove() {
-		int moveIndex = moves.size() - 1;
-		return moveIndex < 0 ? -1 : moves.get(moveIndex);
+		return hasPreviousMove() ? moves.peek().move : -1;
+	}
+
+	public MoveInfo getLastMoveInfo() {
+		return moves.peek();
+	}
+
+	public MoveInfo getUnMadeMoveInfo() {
+		return undos.peek();
 	}
 
 	public void removeLastMove() {
-		moves.remove(moves.size() - 1);
-		algebraicMoves.remove(algebraicMoves.size() - 1);
+		if (hasPreviousMove()) {
+			undos.push(moves.pop());
+		}
+	}
+
+	public void addBackLastMove() {
+		if (hasUnMadeMove()) {
+			moves.push(undos.pop());
+		}
 	}
 
 	public String getLog() {
 		StringBuffer sb = new StringBuffer();
-		int moveCount = algebraicMoves.size();
+		MoveInfo moveArray[] = moves.toArray(new MoveInfo[0]);
+		int moveCount = moveArray.length;
 		String rowColor = GRAY_HEX;
 		sb.append("<html>");
-		sb.append("<body>");
+		sb.append("<body style='font-size: 14px'>");
 		sb.append("<table cellpadding='2' cellspacing='0' style='width: 100%; border-collapse: collapse;'>");
-		for (int i = 0; i < moveCount; i++) {
-			if ((i + 1) % 2 == 0) {
-				sb.append("<td>").append(algebraicMoves.get(i)).append("</td></tr>"); // Black move
-				rowColor = rowColor == GRAY_HEX ? LIGHT_GRAY_HEX : GRAY_HEX;
-			} else {
+		for (int i = moveCount - 1; i >= 0; i--) {
+			int moveNum = moveCount - i;
+			if ((moveNum + 1) % 2 == 0) {
 				sb.append("<tr").append(" style='background-color:").append(rowColor).append(";'>");
-				sb.append("<td style='padding-left: 10;'><b>").append((i + 1) / 2 + 1).append(".</b></td>"); // Number
-				sb.append("<td>").append(algebraicMoves.get(i)).append("</td>"); // White move
+				sb.append("<td style='padding-left: 10;'><b>").append(moveNum / 2 + 1).append(".</b></td>"); // Number
+				sb.append("<td>").append(moveArray[i].algebraicMove).append("</td>"); // White move
+			} else {
+				sb.append("<td>").append(moveArray[i].algebraicMove).append("</td></tr>"); // Black move
+				rowColor = rowColor == GRAY_HEX ? LIGHT_GRAY_HEX : GRAY_HEX;
 			}
 		}
 		sb.append(moveCount % 2 == 1 ? "<td>&nbsp;&nbsp;</td></tr>" : "");

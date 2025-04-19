@@ -14,7 +14,6 @@ public class Move {
 	private static final int DOUBLE_PAWN_PUSH_FLAG = 0x200000;
 	private static final int EN_PASSANT_FLAG = 0x400000;
 	private static final int CASTLE_FLAG = 0x800000;
-//	private static final int UPDATE_GUI_FLAG = 0x1000000;
 
 	public static final int encodeMove(int src, int dst, int piece, int promotedPiece, int captureFlag,
 			int doublePawnPushFlag, int enPassantFlag, int castleFlag) {

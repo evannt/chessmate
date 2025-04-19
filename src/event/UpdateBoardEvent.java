@@ -4,14 +4,14 @@ import game.SoundType;
 
 public class UpdateBoardEvent implements ChessEvent {
 
-	private SoundType moveType;
+	private SoundType soundType;
 
-	public UpdateBoardEvent(SoundType moveType) {
-		this.moveType = moveType;
+	public UpdateBoardEvent(SoundType soundType) {
+		this.soundType = soundType;
 	}
 
-	public SoundType getMoveType() {
-		return this.moveType;
+	public SoundType getSoundType() {
+		return this.soundType;
 	}
 
 	@Override

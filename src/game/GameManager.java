@@ -3,6 +3,7 @@ package game;
 import java.awt.event.MouseEvent;
 
 import chess.Move;
+import chess.MoveInfo;
 import chess.MoveLog;
 import chess.Piece;
 import chess.PieceType;
@@ -103,6 +104,10 @@ public class GameManager implements ChessEventListener {
 		return position;
 	}
 
+	public int getTurn() {
+		return isCheckmate() ? Piece.BOTH : position.getTurn();
+	}
+
 	public int getSelectedSquare() {
 		return selectedSquare;
 	}
@@ -127,6 +132,28 @@ public class GameManager implements ChessEventListener {
 	public boolean isStalemate() {
 		return !position.isInCheck() &&
 				MoveGenerator.generateAllMoves(position).removeIllegalMoves(position).moveCount == 0;
+	}
+
+	public void undoMove() {
+		if (moveLog.hasPreviousMove()) {
+			MoveInfo lastMove = moveLog.getLastMoveInfo();
+			position.unMakeMove(lastMove.move, lastMove.undoInfo);
+			moveLog.removeLastMove();
+			chessEventManager.notify(new UpdateBoardEvent(SoundType.fromMove(lastMove.move, position.isInCheck())));
+		} else {
+			chessEventManager.notify(new UpdateBoardEvent(SoundType.INVALID));
+		}
+	}
+
+	public void redoMove() {
+		if (moveLog.hasUnMadeMove()) {
+			MoveInfo unMadeMove = moveLog.getUnMadeMoveInfo();
+			position.makeMove(unMadeMove.move, unMadeMove.undoInfo);
+			moveLog.addBackLastMove();
+			chessEventManager.notify(new UpdateBoardEvent(SoundType.fromMove(unMadeMove.move, position.isInCheck())));
+		} else {
+			chessEventManager.notify(new UpdateBoardEvent(SoundType.INVALID));
+		}
 	}
 
 	public void startComputerThinking() {
@@ -217,7 +244,7 @@ public class GameManager implements ChessEventListener {
 			}
 			position.makeMove(move, ui);
 			updateGameState();
-			moveLog.addMove(position, validMoves, move, gameState == GameState.CHECKMATE);
+			moveLog.addMove(position, validMoves, move, ui, gameState == GameState.CHECKMATE);
 			chessEventManager.notify(new UpdateBoardEvent(SoundType.fromMove(move, position.isInCheck())));
 			checkGameState();
 
@@ -250,7 +277,7 @@ public class GameManager implements ChessEventListener {
 			int move = computerMoveEvent.getMove();
 			position.makeMove(move, ui);
 			updateGameState();
-			moveLog.addMove(position, computerMoveEvent.getValidMoves(), move, gameState == GameState.CHECKMATE);
+			moveLog.addMove(position, computerMoveEvent.getValidMoves(), move, ui, gameState == GameState.CHECKMATE);
 			chessEventManager.notify(new UpdateBoardEvent(SoundType.fromMove(move, position.isInCheck())));
 			checkGameState();
 		}
@@ -260,11 +287,12 @@ public class GameManager implements ChessEventListener {
 		switch (gameState) {
 		case CHECKMATE:
 			int winner = position.getTurn() == Piece.WHITE ? Piece.BLACK : Piece.WHITE;
-			GameResultEvent checkmate = new GameResultEvent(gameState, gameMode, winner);
+			GameResultEvent checkmate = new GameResultEvent(gameState, gameMode, winner, gameMode == GameMode.PLAY_BOT
+					&& !isHumanTurn());
 			chessEventManager.notify(checkmate);
 			break;
 		case STALEMATE:
-			GameResultEvent stalemate = new GameResultEvent(gameState, gameMode, Piece.BOTH);
+			GameResultEvent stalemate = new GameResultEvent(gameState, gameMode, Piece.BOTH, false);
 			chessEventManager.notify(stalemate);
 			break;
 		default:
