@@ -80,6 +80,7 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 		chessBoardPainter = new ChessBoardPainter(this);
 		gameManager.addSubscriber(chessBoardPainter, ChessEventType.values());
 		gameManager.addSubscriber(this, ChessEventType.values());
+		userInterface.quitButton.addActionListener((e) -> parent.switchPanel(ChessFrame.MAIN_MENU));
 		userInterface.undoButton.addActionListener((e) -> gameManager.undoMove());
 		userInterface.redoButton.addActionListener((e) -> gameManager.redoMove());
 		addUI();
@@ -96,6 +97,7 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 	}
 
 	public void addUI() {
+		add(userInterface.quitButton);
 		add(userInterface.turnIndicatorDisplay);
 		add(userInterface.undoButton);
 		add(userInterface.redoButton);
