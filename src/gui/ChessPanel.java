@@ -83,7 +83,6 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 		userInterface.undoButton.addActionListener((e) -> gameManager.undoMove());
 		userInterface.redoButton.addActionListener((e) -> gameManager.redoMove());
 		addUI();
-		userInterface.updateTurnIndicator(gameManager.getTurn());
 		soundManager.playSound(SoundType.GAME_START.getSoundKey());
 	}
 

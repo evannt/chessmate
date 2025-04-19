@@ -1,6 +1,5 @@
 package engine;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
@@ -105,32 +104,32 @@ class LegalMovesTest {
 				switch (depth) {
 				case 1:
 //					errorMessage += " Expected " + perft1Results.get(moveString) + " nodes but was " + currNodes + " ";
-					assertTrue(errorMessage, perft1Results.get(moveString) == currNodes);
+					assertEquals(perft1Results.get(moveString), currNodes, errorMessage);
 					break;
 				case 2:
 //					errorMessage += " Expected " + perft2Results.get(moveString) + " nodes but was " + currNodes + " ";
-					assertTrue(errorMessage, perft2Results.get(moveString) == currNodes);
+					assertEquals(perft2Results.get(moveString), currNodes, errorMessage);
 					break;
 				case 3:
 //					errorMessage += " Expected " + perft3Results.get(moveString) + " nodes but was " + currNodes;
-					assertTrue(errorMessage, perft3Results.get(moveString) == currNodes);
+					assertEquals(perft3Results.get(moveString), currNodes, errorMessage);
 					break;
 				case 4:
 //					errorMessage += " Expected " + perft4Results.get(moveString) + " nodes but was " + currNodes + " ";
-					assertTrue(errorMessage, perft4Results.get(moveString) == currNodes);
+					assertEquals(perft4Results.get(moveString), currNodes, errorMessage);
 					break;
 				case 5:
 //					errorMessage += " Expected " + perft5Results.get(moveString) + " nodes but was " + currNodes + " ";
-					assertTrue(errorMessage, perft5Results.get(moveString) == currNodes);
+					assertEquals(perft5Results.get(moveString), currNodes, errorMessage);
 					break;
 				case 6:
 //					errorMessage += " Expected " + perft6Results.get(moveString) + " nodes but was " + currNodes + " ";
-					assertTrue(errorMessage, perft6Results.get(moveString) == currNodes);
+					assertEquals(perft6Results.get(moveString), currNodes, errorMessage);
 					break;
 				case 7:
-					assertTrue(errorMessage, perft7Results.get(moveString) == currNodes);
+					assertEquals(perft7Results.get(moveString), currNodes, errorMessage);
 				case 8:
-					assertTrue(errorMessage, perft8Results.get(moveString) == currNodes);
+					assertEquals(perft8Results.get(moveString), currNodes, errorMessage);
 				}
 			}
 			position.unMakeMove(move, ui);

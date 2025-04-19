@@ -3,6 +3,7 @@ package main;
 import java.util.Scanner;
 
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import chess.Position;
 import chess.UndoInfo;
@@ -22,6 +23,12 @@ public class Main {
 
 		if (debug) {
 			debugPosition(position);
+		}
+
+		try {
+			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 		SwingUtilities.invokeLater(() -> new ChessFrame()); // display game screen

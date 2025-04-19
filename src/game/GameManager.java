@@ -105,7 +105,7 @@ public class GameManager implements ChessEventListener {
 	}
 
 	public int getTurn() {
-		return position.getTurn();
+		return isCheckmate() ? Piece.BOTH : position.getTurn();
 	}
 
 	public int getSelectedSquare() {
@@ -141,7 +141,6 @@ public class GameManager implements ChessEventListener {
 			moveLog.removeLastMove();
 			chessEventManager.notify(new UpdateBoardEvent(SoundType.fromMove(lastMove.move, position.isInCheck())));
 		} else {
-			System.out.println("INVALID UNDO");
 			chessEventManager.notify(new UpdateBoardEvent(SoundType.INVALID));
 		}
 	}
@@ -253,7 +252,6 @@ public class GameManager implements ChessEventListener {
 				startComputerThinking();
 			}
 		}
-		System.out.println(ui);
 	}
 
 	public void resetActivePiecePosition() {
@@ -289,11 +287,12 @@ public class GameManager implements ChessEventListener {
 		switch (gameState) {
 		case CHECKMATE:
 			int winner = position.getTurn() == Piece.WHITE ? Piece.BLACK : Piece.WHITE;
-			GameResultEvent checkmate = new GameResultEvent(gameState, gameMode, winner);
+			GameResultEvent checkmate = new GameResultEvent(gameState, gameMode, winner, gameMode == GameMode.PLAY_BOT
+					&& !isHumanTurn());
 			chessEventManager.notify(checkmate);
 			break;
 		case STALEMATE:
-			GameResultEvent stalemate = new GameResultEvent(gameState, gameMode, Piece.BOTH);
+			GameResultEvent stalemate = new GameResultEvent(gameState, gameMode, Piece.BOTH, false);
 			chessEventManager.notify(stalemate);
 			break;
 		default:

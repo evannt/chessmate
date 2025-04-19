@@ -66,7 +66,7 @@ public class MoveLog {
 		int moveCount = moveArray.length;
 		String rowColor = GRAY_HEX;
 		sb.append("<html>");
-		sb.append("<body>");
+		sb.append("<body style='font-size: 14px'>");
 		sb.append("<table cellpadding='2' cellspacing='0' style='width: 100%; border-collapse: collapse;'>");
 		for (int i = moveCount - 1; i >= 0; i--) {
 			int moveNum = moveCount - i;

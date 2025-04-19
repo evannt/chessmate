@@ -80,10 +80,12 @@ public class GameResultIndicator extends JDialog {
 		button.setMaximumSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
 
 		button.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mouseEntered(MouseEvent evt) {
 				button.setBackground(ChessFrame.DARK_GRAY_ALT);
 			}
 
+			@Override
 			public void mouseExited(MouseEvent evt) {
 				button.setBackground(ChessFrame.LIGHT_GRAY);
 			}
@@ -104,9 +106,10 @@ public class GameResultIndicator extends JDialog {
 		if (gameResult.getGameState() == GameState.STALEMATE) {
 			return "Draw";
 		}
+		String winnerColor = gameResult.getWinner() == Piece.WHITE ? "White" : "Black";
 		return (gameResult.getGameMode() == GameMode.PLAY_FRIEND ?
-				gameResult.getWinner() == Piece.WHITE ? "White" : "Black" :
-				"You") + " Won!";
+				winnerColor :
+				gameResult.isHumanWinner() ? "You" : winnerColor) + " Won!";
 
 	}
 

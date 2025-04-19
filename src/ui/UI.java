@@ -150,8 +150,10 @@ public class UI {
 	}
 
 	public void updateTurnIndicator(int color) {
-		turnText.setText((color == Piece.WHITE ? "White's" : "Black's") + " Turn");
-		turnIndicator.setBackground(color == Piece.WHITE ? Color.white : Color.black);
+		turnText.setText(color == Piece.WHITE ? "White's Turn" : color == Piece.BLACK ? "Black's Turn" : "");
+		turnIndicator.setBackground(color == Piece.WHITE ?
+				Color.white :
+				color == Piece.BLACK ? Color.black : ChessFrame.DARK_GRAY_ALT);
 	}
 
 	private JButton createUIButton(String text) {
@@ -164,10 +166,12 @@ public class UI {
 		button.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 		button.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mouseEntered(MouseEvent evt) {
 				button.setBackground(ChessFrame.DARK_GRAY_ALT);
 			}
 
+			@Override
 			public void mouseExited(MouseEvent evt) {
 				button.setBackground(ChessFrame.LIGHT_GRAY);
 			}

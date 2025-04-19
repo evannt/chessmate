@@ -8,11 +8,13 @@ public class GameResultEvent implements ChessEvent {
 	private GameState gameState;
 	private GameMode gameMode;
 	private int winner;
+	private boolean isHumanWinner;
 
-	public GameResultEvent(GameState gameState, GameMode gameMode, int winner) {
+	public GameResultEvent(GameState gameState, GameMode gameMode, int winner, boolean isHumanWinner) {
 		this.gameState = gameState;
 		this.gameMode = gameMode;
 		this.winner = winner;
+		this.isHumanWinner = isHumanWinner;
 	}
 
 	public GameState getGameState() {
@@ -25,6 +27,10 @@ public class GameResultEvent implements ChessEvent {
 
 	public int getWinner() {
 		return winner;
+	}
+
+	public boolean isHumanWinner() {
+		return isHumanWinner;
 	}
 
 	@Override
