@@ -3,15 +3,19 @@ package gui;
 import java.awt.CardLayout;
 import java.awt.Color;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import chess.Piece;
 import game.GameMode;
 import ui.MainMenu;
 
 public class ChessFrame extends JFrame {
 
 	private static final long serialVersionUID = -2536492765344084132L;
+
+	private static final ImageIcon CHESS_ICON = new ImageIcon(Piece.PIECE_PATH + "pb.png");
 
 	public static final Color DARK_GRAY = new Color(47, 47, 47);
 	public static final Color DARK_GRAY_ALT = new Color(65, 65, 65);
@@ -35,12 +39,13 @@ public class ChessFrame extends JFrame {
 	public ChessFrame() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);
-		setTitle("Chess");
+		setTitle("Chessmate");
+		setIconImage(CHESS_ICON.getImage());
 
+		cardLayout = new CardLayout();
 		mainMenu = new MainMenu(this);
 		chessPanel = new ChessPanel(this);
 
-		cardLayout = new CardLayout();
 		panels = new JPanel(cardLayout);
 		panels.add(mainMenu, MAIN_MENU);
 		panels.add(chessPanel, CHESS_PANEL);
