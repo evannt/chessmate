@@ -28,10 +28,15 @@ public class UI {
 	private static final Font BUTTON_FONT = new Font("Georgia", Font.BOLD, 14);
 	private static final int SMALL_BUTTON_WIDTH = 50;
 	private static final int SMALL_BUTTON_HEIGHT = 30;
+	private static final int MEDIUM_BUTTON_WIDTH = 70;
+	private static final int MEDIUM_BUTTON_HEIGHT = 30;
 	private static final int BUTTON_WIDTH = 120;
 	private static final int BUTTON_HEIGHT = 30;
 	private static final int TURN_INDICATOR_WIDTH = 90;
 	private static final int TURN_INDICATOR_HEIGHT = 90;
+
+	private static final int QUIT_BUTTON_X = ChessBoardPainter.TILE_SIZE / 4;
+	private static final int QUIT_BUTTON_Y = ChessBoardPainter.TILE_SIZE / 4;
 
 	private static final int MOVE_LOG_X = 11 * ChessBoardPainter.TILE_SIZE;
 	private static final int MOVE_LOG_Y = ChessBoardPainter.START_RANK * ChessBoardPainter.TILE_SIZE;
@@ -56,6 +61,8 @@ public class UI {
 	private static final int NEW_GAME_BUTTON_Y = ChessBoardPainter.START_RANK * ChessBoardPainter.TILE_SIZE
 			+ (MOVE_LOG_HEIGHT + ChessBoardPainter.TILE_SIZE);
 
+	public final JButton quitButton;
+
 	public final JPanel turnIndicatorDisplay;
 	public final JPanel turnIndicator;
 	public final JLabel turnText;
@@ -70,6 +77,9 @@ public class UI {
 	public final JTextPane moveLogDisplay;
 
 	public UI() {
+		quitButton = createUIButton("Quit");
+		quitButton.setBounds(QUIT_BUTTON_X, QUIT_BUTTON_Y, MEDIUM_BUTTON_WIDTH, MEDIUM_BUTTON_HEIGHT);
+
 		turnIndicatorDisplay = new JPanel(new BorderLayout(15, 10));
 		turnIndicator = new JPanel();
 		turnText = new JLabel();
@@ -80,7 +90,6 @@ public class UI {
 		turnIndicatorDisplay.add(turnIndicator, BorderLayout.CENTER);
 		turnIndicatorDisplay.setBackground(ChessFrame.DARK_GRAY_ALT);
 		turnIndicatorDisplay.setBorder(BorderFactory.createLineBorder(ChessFrame.DARK_GRAY_ALT, 5));
-//		turnIndicatorDisplay.setOpaque(false);
 		turnIndicatorDisplay.setBounds(TURN_INDICATOR_X, TURN_INDICATOR_Y, TURN_INDICATOR_WIDTH, TURN_INDICATOR_HEIGHT);
 
 		undoButton = createUIButton("<");
