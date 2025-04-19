@@ -141,6 +141,7 @@ public class GameManager implements ChessEventListener {
 			moveLog.removeLastMove();
 			chessEventManager.notify(new UpdateBoardEvent(SoundType.fromMove(lastMove.move, position.isInCheck())));
 		} else {
+			System.out.println("INVALID UNDO");
 			chessEventManager.notify(new UpdateBoardEvent(SoundType.INVALID));
 		}
 	}

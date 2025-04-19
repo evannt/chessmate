@@ -30,7 +30,7 @@ public class UI {
 	private static final int SMALL_BUTTON_HEIGHT = 30;
 	private static final int BUTTON_WIDTH = 120;
 	private static final int BUTTON_HEIGHT = 30;
-	private static final int TURN_INDICATOR_WIDTH = 75;
+	private static final int TURN_INDICATOR_WIDTH = 90;
 	private static final int TURN_INDICATOR_HEIGHT = 90;
 
 	private static final int MOVE_LOG_X = 11 * ChessBoardPainter.TILE_SIZE;
@@ -38,7 +38,7 @@ public class UI {
 	private static final int MOVE_LOG_WIDTH = 3 * ChessBoardPainter.TILE_SIZE;
 	private static final int MOVE_LOG_HEIGHT = 7 * ChessBoardPainter.TILE_SIZE;
 
-	private static final int TURN_INDICATOR_X = ChessBoardPainter.TILE_SIZE / 2;
+	private static final int TURN_INDICATOR_X = ChessBoardPainter.TILE_SIZE / 4;
 	private static final int TURN_INDICATOR_Y = 5 * ChessBoardPainter.TILE_SIZE;
 
 	private static final int UNDO_BUTTON_X = 11 * ChessBoardPainter.TILE_SIZE;
@@ -75,9 +75,12 @@ public class UI {
 		turnText = new JLabel();
 		turnText.setForeground(Color.WHITE);
 		turnIndicator.setToolTipText("Turn");
+		turnText.setHorizontalAlignment(JLabel.CENTER);
 		turnIndicatorDisplay.add(turnText, BorderLayout.NORTH);
 		turnIndicatorDisplay.add(turnIndicator, BorderLayout.CENTER);
-		turnIndicatorDisplay.setOpaque(false);
+		turnIndicatorDisplay.setBackground(ChessFrame.DARK_GRAY_ALT);
+		turnIndicatorDisplay.setBorder(BorderFactory.createLineBorder(ChessFrame.DARK_GRAY_ALT, 5));
+//		turnIndicatorDisplay.setOpaque(false);
 		turnIndicatorDisplay.setBounds(TURN_INDICATOR_X, TURN_INDICATOR_Y, TURN_INDICATOR_WIDTH, TURN_INDICATOR_HEIGHT);
 
 		undoButton = createUIButton("<");
