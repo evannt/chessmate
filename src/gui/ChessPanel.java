@@ -10,6 +10,7 @@ import java.awt.event.MouseMotionAdapter;
 
 import javax.swing.JPanel;
 
+import chess.Piece;
 import event.ChessEvent;
 import event.ChessEventListener;
 import event.ChessEventType;
@@ -77,7 +78,7 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 		soundManager = new SoundManager();
 
 		gameManager = new GameManager(gameMode, selectedColor);
-		chessBoardPainter = new ChessBoardPainter(this);
+		chessBoardPainter = new ChessBoardPainter(this, gameMode == GameMode.PLAY_BOT && selectedColor == Piece.BLACK);
 		gameManager.addSubscriber(chessBoardPainter, ChessEventType.values());
 		gameManager.addSubscriber(this, ChessEventType.values());
 		userInterface.quitButton.addActionListener((e) -> parent.switchPanel(ChessFrame.MAIN_MENU));
@@ -109,6 +110,10 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 	public void chessPanelMousePressed(MouseEvent e) {
 		int rank = (e.getY() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_RANK;
 		int file = (e.getX() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_FILE;
+		if (chessBoardPainter.isBoardFlipped()) {
+			rank = BoardUtil.translateCoord(rank);
+			file = BoardUtil.translateCoord(file);
+		}
 		if (rank < 0 || rank > 7 || file < 0 || file > 7) {
 			gameManager.setSelectedSquare(-1);
 			return;
@@ -124,6 +129,10 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 	public void chessPanelMouseReleased(MouseEvent e) {
 		int rank = (e.getY() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_RANK;
 		int file = (e.getX() / ChessBoardPainter.TILE_SIZE) - ChessBoardPainter.START_FILE;
+		if (chessBoardPainter.isBoardFlipped()) {
+			rank = BoardUtil.translateCoord(rank);
+			file = BoardUtil.translateCoord(file);
+		}
 		if (rank < 0 || rank > 7 || file < 0 || file > 7) {
 			gameManager.resetActivePiecePosition();
 			gameManager.setSelectedSquare(-1);
@@ -140,7 +149,7 @@ public class ChessPanel extends JPanel implements ChessEventListener {
 
 	public void chessPanelMouseDragged(MouseEvent e) {
 		if (gameManager.isGameOngoing() && gameManager.isHumanTurn()) {
-			gameManager.mouseDragged(e);
+			gameManager.mouseDragged(e, chessBoardPainter.isBoardFlipped());
 		}
 		repaint();
 	}

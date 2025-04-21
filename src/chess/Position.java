@@ -223,6 +223,7 @@ public class Position {
 	}
 
 	public void setPosition(String fenString) {
+		// Rooks are inferred to exist based on castle rights
 		// TODO Add regex to match FEN
 		String[] fenFields = fenString.split(" ");
 		String piecePlacement = expandPiecePlacementString(fenFields[0]);
@@ -275,6 +276,7 @@ public class Position {
 				continue;
 			}
 			occupancies[p.isWhite() ? Piece.WHITE : Piece.BLACK] |= bitboards[p.getKey()];
+			occupancies[Piece.BOTH] |= bitboards[p.getKey()];
 		}
 		occupancies[Piece.BOTH] |= occupancies[Piece.WHITE];
 		occupancies[Piece.BOTH] |= occupancies[Piece.BLACK];
@@ -323,6 +325,15 @@ public class Position {
 		pieces[square] = new Piece(promotion);
 		pieces[square].setX((file + ChessBoardPainter.START_FILE) * ChessBoardPainter.TILE_SIZE);
 		pieces[square].setY((rank + ChessBoardPainter.START_RANK) * ChessBoardPainter.TILE_SIZE);
+	}
+
+	public void flipPieces() {
+		for (Piece p : pieces) {
+			if (p != null) {
+				p.setX(ChessBoardPainter.translateX(p.getX()));
+				p.setY(ChessBoardPainter.translateX(p.getY()));
+			}
+		}
 	}
 
 	public void resetPiecePositions() {

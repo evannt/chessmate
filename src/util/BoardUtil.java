@@ -1,5 +1,7 @@
 package util;
 
+import gui.ChessBoardPainter;
+
 public class BoardUtil {
 
 	public static int getSquareAsIndex(String square) {
@@ -52,5 +54,19 @@ public class BoardUtil {
 		case 'h' -> 7;
 		default -> -1;
 		};
+	}
+
+	public static int translateCoord(int rank) {
+		return 7 - rank;
+	}
+
+	public static int translateX(int x) {
+		return (ChessBoardPainter.TILE_SIZE * ChessBoardPainter.END_FILE) - x
+				+ (ChessBoardPainter.TILE_SIZE * ChessBoardPainter.START_FILE);
+	}
+
+	public static int translateY(int y) {
+		return (ChessBoardPainter.TILE_SIZE * ChessBoardPainter.END_RANK) - y
+				+ (ChessBoardPainter.TILE_SIZE * ChessBoardPainter.START_RANK);
 	}
 }

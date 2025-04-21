@@ -84,6 +84,7 @@ public class MoveGenerator {
 						int a8 = BoardUtil.getSquareAsIndex("a8");
 						int a7 = BoardUtil.getSquareAsIndex("a7");
 						int h7 = BoardUtil.getSquareAsIndex("h7");
+
 						// quiet pawn moves
 						if (!(dst < a8) && BitUtil.getBit(bothOccupancies, dst) == 0) {
 							// pawn promotion
@@ -187,7 +188,7 @@ public class MoveGenerator {
 						int h2 = BoardUtil.getSquareAsIndex("h2");
 
 						// quiet pawn moves
-						if (!(dst > h1) && BitUtil.getBit(bothOccupancies, dst) == 0) {
+						if (dst <= h1 && BitUtil.getBit(bothOccupancies, dst) == 0) {
 							// pawn promotion
 							if (src >= a2 && src <= h2) {
 								// add move into the move list
@@ -427,6 +428,7 @@ public class MoveGenerator {
 				}
 			}
 		}
+		moveList.printMoves();
 		return moveList;
 	}
 
