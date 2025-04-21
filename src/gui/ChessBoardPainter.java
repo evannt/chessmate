@@ -24,6 +24,8 @@ public class ChessBoardPainter implements ChessEventListener {
 	public static final int SCALED_TILE_SIZE = TILE_SIZE * 5;
 	public static final int START_RANK = 2;
 	public static final int START_FILE = 2;
+	public static final int END_RANK = START_RANK + 7;
+	public static final int END_FILE = START_FILE + 7;
 
 	// Border location and size
 	private static final int BORDER_X = (START_FILE * TILE_SIZE) - (TILE_SIZE / 6);
@@ -45,9 +47,15 @@ public class ChessBoardPainter implements ChessEventListener {
 	public static final Font ARIAL_11 = new Font("Arial", Font.BOLD, 11);
 
 	private ChessPanel chessPanel;
+	private boolean isFlipped;
 
-	public ChessBoardPainter(ChessPanel chessPanel) {
+	public ChessBoardPainter(ChessPanel chessPanel, boolean isFlipped) {
 		this.chessPanel = chessPanel;
+		this.isFlipped = isFlipped;
+	}
+
+	public boolean isBoardFlipped() {
+		return isFlipped;
 	}
 
 	public void drawBorder(Graphics2D graphics2D) {
@@ -56,37 +64,65 @@ public class ChessBoardPainter implements ChessEventListener {
 	}
 
 	public void drawBoard(Graphics2D graphics2D) {
-		for (int rank = START_RANK; rank < START_RANK + 8; rank++) {
-			for (int file = START_FILE; file < START_FILE + 8; file++) {
-				if ((rank + file) % 2 == 0) {
-					graphics2D.setColor(GREEN);
-				} else {
-					graphics2D.setColor(TAN);
+		if (isFlipped) {
+			for (int rank = START_RANK + 7; rank >= START_RANK; rank--) {
+				for (int file = START_FILE + 7; file >= START_FILE; file--) {
+					if ((rank + file) % 2 == 0) {
+						graphics2D.setColor(TAN);
+					} else {
+						graphics2D.setColor(GREEN);
+					}
+					graphics2D.fillRect(file * TILE_SIZE, rank * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+					graphics2D.setFont(ARIAL_11);
+					graphics2D.setColor(Color.DARK_GRAY);
+					if (Math.abs(rank - START_RANK) == 7) {
+						graphics2D.drawString(BoardUtil.getFileAsLetter(Math.abs(file - START_FILE - 7)),
+								(file * TILE_SIZE) + (int) (TILE_SIZE / 1.125),
+								(rank * TILE_SIZE) + (int) (TILE_SIZE / 1.025));
+					}
+					if (file == START_FILE) {
+						graphics2D.drawString(String.valueOf(BoardUtil.getTrueRank(rank - START_RANK + 7)),
+								(file * TILE_SIZE) + TILE_SIZE / 18, (rank * TILE_SIZE) + TILE_SIZE / 5);
+					}
 				}
-				graphics2D.fillRect(file * TILE_SIZE, rank * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-				graphics2D.setFont(ARIAL_11);
-				graphics2D.setColor(Color.DARK_GRAY);
-				if (Math.abs(rank - START_RANK) == 7) {
-					graphics2D.drawString(BoardUtil.getFileAsLetter(file - START_FILE),
-							(file * TILE_SIZE) + (int) (TILE_SIZE / 1.125),
-							(rank * TILE_SIZE) + (int) (TILE_SIZE / 1.025));
-				}
-				if (file == START_FILE) {
-					graphics2D.drawString(String.valueOf(BoardUtil.getTrueRank(rank - START_RANK)),
-							(file * TILE_SIZE) + TILE_SIZE / 18, (rank * TILE_SIZE) + TILE_SIZE / 5);
-
+			}
+		} else {
+			for (int rank = START_RANK; rank < START_RANK + 8; rank++) {
+				for (int file = START_FILE; file < START_FILE + 8; file++) {
+					if ((rank + file) % 2 == 0) {
+						graphics2D.setColor(TAN);
+					} else {
+						graphics2D.setColor(GREEN);
+					}
+					graphics2D.fillRect(file * TILE_SIZE, rank * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+					graphics2D.setFont(ARIAL_11);
+					graphics2D.setColor(Color.DARK_GRAY);
+					if (Math.abs(rank - START_RANK) == 7) {
+						graphics2D.drawString(BoardUtil.getFileAsLetter(file - START_FILE),
+								(file * TILE_SIZE) + (int) (TILE_SIZE / 1.125),
+								(rank * TILE_SIZE) + (int) (TILE_SIZE / 1.025));
+					}
+					if (file == START_FILE) {
+						graphics2D.drawString(String.valueOf(BoardUtil.getTrueRank(rank - START_RANK)),
+								(file * TILE_SIZE) + TILE_SIZE / 18, (rank * TILE_SIZE) + TILE_SIZE / 5);
+					}
 				}
 			}
 		}
+
 	}
 
 	public void drawPieces(Graphics2D graphics2D, Position position) {
+		System.out.println("USING FLIPPED: " + isFlipped);
 		for (int i = 0; i < 64; i++) {
 			Piece p = position.getPiece(i);
 			if (p != null && p.getPieceType() != PieceType.NONE) {
 				// TODO Bound pieces to the board region
-				int x = p.getX();
-				int y = p.getY();
+				int x = isFlipped ? p.getFlippedX() : p.getX();
+				int y = isFlipped ? p.getFlippedY() : p.getY();
+				if (p.getPieceType() == PieceType.BPAWN) {
+					System.out.println(p.getPieceType() + " X: " + x + " Y: " + y);
+				}
 				graphics2D.drawImage(p.getImage(), x, y, TILE_SIZE, TILE_SIZE, null);
 			}
 		}
@@ -97,6 +133,10 @@ public class ChessBoardPainter implements ChessEventListener {
 		int file = BoardUtil.getFileFromIndex(square);
 		int x = (file + START_FILE) * TILE_SIZE;
 		int y = (rank + START_RANK) * TILE_SIZE;
+		if (isFlipped) {
+			x = BoardUtil.translateX(x);
+			y = BoardUtil.translateY(y);
+		}
 		Point point = new Point(x, y);
 		SwingUtilities.convertPointToScreen(point, chessPanel);
 		PawnPromotionPrompt prompt = new PawnPromotionPrompt(color, point.x, point.y);
@@ -110,6 +150,10 @@ public class ChessBoardPainter implements ChessEventListener {
 			int file = BoardUtil.getFileFromIndex(selectedSquare);
 			int x = (file + START_FILE) * TILE_SIZE;
 			int y = (rank + START_RANK) * TILE_SIZE;
+			if (isFlipped) {
+				x = BoardUtil.translateX(x);
+				y = BoardUtil.translateY(y);
+			}
 			graphics2D.setColor(HIGHLIGHT);
 			graphics2D.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 		}
@@ -120,12 +164,18 @@ public class ChessBoardPainter implements ChessEventListener {
 			int src = Move.getSrc(move);
 			int srcX = (BoardUtil.getFileFromIndex(src) + START_FILE) * TILE_SIZE;
 			int srcY = (BoardUtil.getRankFromIndex(src) + START_RANK) * TILE_SIZE;
-			graphics2D.setColor(HIGHLIGHT);
-			graphics2D.fillRect(srcX, srcY, TILE_SIZE, TILE_SIZE);
+
 			int dst = Move.getDst(move);
 			int dstX = (BoardUtil.getFileFromIndex(dst) + START_FILE) * TILE_SIZE;
 			int dstY = (BoardUtil.getRankFromIndex(dst) + START_RANK) * TILE_SIZE;
+			if (isFlipped) {
+				srcX = BoardUtil.translateX(srcX);
+				srcY = BoardUtil.translateY(srcY);
+				dstX = BoardUtil.translateX(dstX);
+				dstY = BoardUtil.translateY(dstY);
+			}
 			graphics2D.setColor(HIGHLIGHT);
+			graphics2D.fillRect(srcX, srcY, TILE_SIZE, TILE_SIZE);
 			graphics2D.fillRect(dstX, dstY, TILE_SIZE, TILE_SIZE);
 		}
 	}
@@ -137,6 +187,14 @@ public class ChessBoardPainter implements ChessEventListener {
 			int square = promotionEvent.getTargetSquare();
 			promotionEvent.setPromotionResponse(drawPiecePromotionPrompt(color, square));
 		}
+	}
+
+	public static int translateX(int x) {
+		return (TILE_SIZE * END_FILE) - x + (TILE_SIZE * START_FILE);
+	}
+
+	public static int translateY(int y) {
+		return (TILE_SIZE * END_RANK) - y + (TILE_SIZE * START_RANK);
 	}
 
 }

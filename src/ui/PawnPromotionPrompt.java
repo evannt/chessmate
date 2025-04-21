@@ -32,10 +32,10 @@ public class PawnPromotionPrompt extends JDialog {
 	private static final ImageIcon WROOK = new ImageIcon(ImageUtil.getImage(Piece.PIECE_PATH + "rw.png"));
 	private static final ImageIcon WBISHOP = new ImageIcon(ImageUtil.getImage(Piece.PIECE_PATH + "bw.png"));
 
-	private static final ImageIcon BQUEEN = new ImageIcon(Piece.PIECE_PATH + "qb.png");
-	private static final ImageIcon BKNIGHT = new ImageIcon(Piece.PIECE_PATH + "nb.png");
-	private static final ImageIcon BROOK = new ImageIcon(Piece.PIECE_PATH + "rb.png");
-	private static final ImageIcon BBISHOP = new ImageIcon(Piece.PIECE_PATH + "bb.png");
+	private static final ImageIcon BQUEEN = new ImageIcon(ImageUtil.getImage(Piece.PIECE_PATH + "qb.png"));
+	private static final ImageIcon BKNIGHT = new ImageIcon(ImageUtil.getImage(Piece.PIECE_PATH + "nb.png"));
+	private static final ImageIcon BROOK = new ImageIcon(ImageUtil.getImage(Piece.PIECE_PATH + "rb.png"));
+	private static final ImageIcon BBISHOP = new ImageIcon(ImageUtil.getImage(Piece.PIECE_PATH + "bb.png"));
 
 	private PieceType promotionSelection;
 

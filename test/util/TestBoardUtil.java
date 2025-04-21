@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
+import gui.ChessBoardPainter;
+
 public class TestBoardUtil {
 
 	private static final int MAX_SQUARES = 64;
@@ -41,6 +43,30 @@ public class TestBoardUtil {
 	public void testGetIndexAsSquare() {
 		for (int sq = 0; sq < MAX_SQUARES; sq++) {
 			assertEquals(SQUARE_COORDINATES[sq], BoardUtil.getIndexAsSquare(SQUARE_INDICIES[sq]));
+		}
+	}
+
+	@Test
+	public void testTranslateX() {
+		int x[] = new int[8];
+
+		for (int file = ChessBoardPainter.START_FILE; file < ChessBoardPainter.START_FILE + 8; file++) {
+			x[file - ChessBoardPainter.START_FILE] = file * ChessBoardPainter.TILE_SIZE;
+		}
+		for (int i = 0; i < 8; i++) {
+			assertEquals(x[7 - i], BoardUtil.translateX(x[i]));
+		}
+	}
+
+	@Test
+	public void testTranslateY() {
+		int y[] = new int[8];
+
+		for (int rank = ChessBoardPainter.START_RANK; rank < ChessBoardPainter.START_RANK + 8; rank++) {
+			y[rank - ChessBoardPainter.START_RANK] = rank * ChessBoardPainter.TILE_SIZE;
+		}
+		for (int i = 0; i < 8; i++) {
+			assertEquals(y[7 - i], BoardUtil.translateY(y[i]));
 		}
 	}
 

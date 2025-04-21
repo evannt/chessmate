@@ -66,6 +66,9 @@ public class GameManager implements ChessEventListener {
 		selectedSquare = -1;
 		activeSquare = -1;
 		gameState = GameState.ONGOING;
+		if (!isHumanTurn()) {
+			startComputerThinking();
+		}
 	}
 
 	public void restartGame() {
@@ -211,14 +214,22 @@ public class GameManager implements ChessEventListener {
 		System.out.println(position.getFenString());
 	}
 
-	public void mouseDragged(MouseEvent e) {
+	public void mouseDragged(MouseEvent e, boolean isFlipped) {
 		if (selectedSquare != -1) {
 			setActiveSquare(selectedSquare);
 			Piece p = position.getPiece(selectedSquare);
-			if (p != null) {
+			if (p == null) {
+				return;
+			}
+
+			if (isFlipped) {
+				p.setX(BoardUtil.translateX(e.getX() - (ChessBoardPainter.TILE_SIZE / 2)));
+				p.setY(BoardUtil.translateY(e.getY() - (ChessBoardPainter.TILE_SIZE / 2)));
+			} else {
 				p.setX(e.getX() - (ChessBoardPainter.TILE_SIZE / 2));
 				p.setY(e.getY() - (ChessBoardPainter.TILE_SIZE / 2));
 			}
+
 		}
 	}
 
@@ -233,6 +244,7 @@ public class GameManager implements ChessEventListener {
 			// Reset location
 			position.setPiecePosition(activeSquare, fromRank, fromFile);
 			chessEventManager.notify(new UpdateBoardEvent(SoundType.INVALID));
+			return;
 		} else {
 			if (Move.getPromotedPiece(move) != 0) {
 				// Pawn Promotion
@@ -240,6 +252,10 @@ public class GameManager implements ChessEventListener {
 				PawnPromotionEvent promotionEvent = new PawnPromotionEvent(to, position.getTurn());
 				chessEventManager.notify(promotionEvent);
 				PieceType promotedPiece = promotionEvent.getPromotedPiece();
+				if (promotedPiece == null) {
+					chessEventManager.notify(new UpdateBoardEvent(SoundType.NONE));
+					return;
+				}
 				move = Move.updatePromotionFlag(move, promotedPiece.getKey());
 			}
 			position.makeMove(move, ui);
@@ -262,6 +278,7 @@ public class GameManager implements ChessEventListener {
 	private int getMove(int src, int dst, MoveList validMoves) {
 		for (int i = 0; i < validMoves.moveCount; i++) {
 			int move = validMoves.mvs[i];
+			System.out.println(Move.decodeMove(move));
 			if (Move.getSrc(move) == src && Move.getDst(move) == dst) {
 				return move;
 			}
@@ -273,6 +290,11 @@ public class GameManager implements ChessEventListener {
 	@Override
 	public void update(ChessEvent event) {
 		if (event instanceof ComputerMoveEvent computerMoveEvent) {
+			try {
+				Thread.sleep(1500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			UndoInfo ui = new UndoInfo();
 			int move = computerMoveEvent.getMove();
 			position.makeMove(move, ui);

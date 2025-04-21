@@ -1,29 +1,21 @@
 package main;
 
-import java.util.Scanner;
-
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import chess.Piece;
 import chess.Position;
-import chess.UndoInfo;
-import engine.Evaluator;
-import engine.MoveGenerator;
-import engine.MoveGenerator.MoveList;
-import engine.Searcher;
 import gui.ChessFrame;
 
 public class Main {
 
 	public static void main(String[] args) {
+
 		Position position = new Position();
-		position.setPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R3KBNR w KQkq - 0 1");
-
-		boolean debug = false;
-
-		if (debug) {
-			debugPosition(position);
-		}
+		position.setPosition("4k3/8/8/8/8/8/p7/4K3 b - - 0 1");
+		printBitBoard(position.getOccupancies()[Piece.WHITE]);
+		printBitBoard(position.getOccupancies()[Piece.BLACK]);
+		printBitBoard(position.getOccupancies()[Piece.BOTH]);
 
 		try {
 			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
@@ -34,35 +26,16 @@ public class Main {
 		SwingUtilities.invokeLater(() -> new ChessFrame()); // display game screen
 	}
 
-	private static void debugPosition(Position position) {
-		Scanner sc = new Scanner(System.in);
-
-		position.setPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R3KBNR w KQkq - 0 1");
-		position.drawBoard();
-		System.out.println(Evaluator.evaluate(position));
-		Searcher searcher = new Searcher();
-		searcher.setPosition(position);
-		searcher.search(1);
-
-		MoveList moves = MoveGenerator.generateAllMoves(position);
-		UndoInfo ui = new UndoInfo();
-		for (int mi = 0; mi < moves.moveCount; mi++) {
-			int move = moves.mvs[mi];
-			if (!position.makeMove(move, ui)) {
-				continue;
+	public static void printBitBoard(long bitboard) {
+		System.out.println("Bitboard representation:");
+		for (int rank = 7; rank >= 0; rank--) {
+			for (int file = 0; file < 8; file++) {
+				int square = rank * 8 + file;
+				System.out.print((bitboard & (1L << square)) != 0 ? "1 " : "0 ");
 			}
-			sc.nextLine();
-			position.drawBoard();
-			System.out.println(Evaluator.evaluate(position));
-			searcher.search(1);
-			System.out.println(position.getFenString());
-
-			sc.nextLine();
-			position.unMakeMove(move, ui);
-			position.drawBoard();
-			System.out.println(Evaluator.evaluate(position));
+			System.out.println();
 		}
-		sc.close();
+		System.out.println();
 	}
 
 }
