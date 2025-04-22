@@ -113,16 +113,12 @@ public class ChessBoardPainter implements ChessEventListener {
 	}
 
 	public void drawPieces(Graphics2D graphics2D, Position position) {
-		System.out.println("USING FLIPPED: " + isFlipped);
 		for (int i = 0; i < 64; i++) {
 			Piece p = position.getPiece(i);
 			if (p != null && p.getPieceType() != PieceType.NONE) {
 				// TODO Bound pieces to the board region
 				int x = isFlipped ? p.getFlippedX() : p.getX();
 				int y = isFlipped ? p.getFlippedY() : p.getY();
-				if (p.getPieceType() == PieceType.BPAWN) {
-					System.out.println(p.getPieceType() + " X: " + x + " Y: " + y);
-				}
 				graphics2D.drawImage(p.getImage(), x, y, TILE_SIZE, TILE_SIZE, null);
 			}
 		}

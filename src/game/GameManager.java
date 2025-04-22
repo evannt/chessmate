@@ -278,7 +278,6 @@ public class GameManager implements ChessEventListener {
 	private int getMove(int src, int dst, MoveList validMoves) {
 		for (int i = 0; i < validMoves.moveCount; i++) {
 			int move = validMoves.mvs[i];
-			System.out.println(Move.decodeMove(move));
 			if (Move.getSrc(move) == src && Move.getDst(move) == dst) {
 				return move;
 			}

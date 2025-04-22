@@ -73,7 +73,7 @@ public class Searcher {
 			score = negamax(-50000, 50000, d);
 			System.out.println("score: " + score + " depth: " + d + " nodes: " + nodes);
 			for (int c = 0; c < pvLength[0]; c++) {
-				System.out.println(Move.decodeMove(pvTable[0][c]));
+//				System.out.println(Move.decodeMove(pvTable[0][c]));
 			}
 		}
 		System.out.println("Best move: " + Move.decodeMove(pvTable[0][0]));
@@ -85,11 +85,11 @@ public class Searcher {
 		Arrays.fill(pvLength, 0);
 
 		score = negamax(-50000, 50000, depth);
-		System.out.println("score: " + score + " depth: " + depth + " nodes: " + nodes);
-		for (int c = 0; c < pvLength[0]; c++) {
-			System.out.println(Move.decodeMove(pvTable[0][c]));
-		}
-		System.out.println("Best move: " + Move.decodeMove(pvTable[0][0]));
+//		System.out.println("score: " + score + " depth: " + depth + " nodes: " + nodes);
+//		for (int c = 0; c < pvLength[0]; c++) {
+//			System.out.println(Move.decodeMove(pvTable[0][c]));
+//		}
+//		System.out.println("Best move: " + Move.decodeMove(pvTable[0][0]));
 		return pvTable[0][0];
 	}
 
@@ -106,9 +106,9 @@ public class Searcher {
 
 		int legalMoves = 0;
 		boolean isKingInCheck = Bitboard.isSquareAttacked(
-				pos.getTurn() == Piece.WHITE
-						? BitUtil.getLS1BIndex(pos.getBitboards()[PieceType.WKING.getKey()])
-						: BitUtil.getLS1BIndex(pos.getBitboards()[PieceType.BKING.getKey()]),
+				pos.getTurn() == Piece.WHITE ?
+						BitUtil.getLS1BIndex(pos.getBitboards()[PieceType.WKING.getKey()]) :
+						BitUtil.getLS1BIndex(pos.getBitboards()[PieceType.BKING.getKey()]),
 				pos.getTurn() == Piece.WHITE ? Piece.BLACK : Piece.WHITE, pos.getBitboards(), pos.getOccupancies());
 
 		if (isKingInCheck) {

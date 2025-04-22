@@ -428,7 +428,6 @@ public class MoveGenerator {
 				}
 			}
 		}
-		moveList.printMoves();
 		return moveList;
 	}
 
