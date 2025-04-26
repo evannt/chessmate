@@ -7,8 +7,6 @@ import util.BitUtil;
 
 public class Evaluator {
 
-	// TODO Copy and paste scores then incrementally update them
-
 	private static int materialScore[] = {
 			0, // empty square score
 			100, // white pawn score
@@ -25,18 +23,6 @@ public class Evaluator {
 			-10000 // black king score
 	};
 
-	// Experiment
-//	public static final int PAWN_SCORE[] = {
-//			0, 0, 0, 0, 0, 0, 0, 0,
-//			8, 16, 24, 32, 32, 24, 16, 8,
-//			3, 12, 20, 28, 28, 20, 12, 3,
-//			-5, 4, 10, 20, 20, 10, 4, -5,
-//			-6, 4, 5, 16, 16, 5, 4, -6,
-//			-6, 4, 2, 5, 5, 2, 4, -6,
-//			-6, 4, 4, -15, -15, 4, 4, -6,
-//			0, 0, 0, 0, 0, 0, 0, 0
-//	};
-
 	protected static final int PAWN_SCORE[] = {
 		    90,  90,  90,  90,  90,  90,  90,  90,
 		    30,  30,  30,  40,  40,  30,  30,  30,
@@ -47,18 +33,6 @@ public class Evaluator {
 		     0,   0,   0, -10, -10,   0,   0,   0,
 		     0,   0,   0,   0,   0,   0,   0,   0
 	};
-
-	// Experiment
-//	private static final int KNIGHT_SCORE[] = {
-//			-53, -42, -32, -21, -21, -32, -42, -53,
-//			-42, -32, -10, 0, 0, -10, -32, -42,
-//			-21, 5, 10, 16, 16, 10, 5, -21,
-//			-18, 0, 10, 21, 21, 10, 0, -18,
-//			-18, 0, 3, 21, 21, 3, 0, -18,
-//			-21, -10, 0, 0, 0, 0, -10, -21,
-//			-42, -32, -10, 0, 0, -10, -32, -42,
-//			-53, -42, -32, -21, -21, -32, -42, -53
-//	};
 
 	protected static final int KNIGHT_SCORE[] = {
 		    -5,   0,   0,   0,   0,   0,   0,  -5,
@@ -71,18 +45,6 @@ public class Evaluator {
 		    -5, -10,   0,   0,   0,   0, -10,  -5
 	};
 
-	// Experiment
-//	private static final int BISHOP_SCORE[] = {
-//			0, 0, 0, 0, 0, 0, 0, 0,
-//			0, 4, 2, 2, 2, 2, 4, 0,
-//			0, 2, 4, 4, 4, 4, 2, 0,
-//			0, 2, 4, 4, 4, 4, 2, 0,
-//			0, 2, 4, 4, 4, 4, 2, 0,
-//			0, 3, 4, 4, 4, 4, 3, 0,
-//			0, 4, 2, 2, 2, 2, 4, 0,
-//			-5, -5, -7, -5, -5, -7, -5, -5
-//	};
-
 	protected static final int BISHOP_SCORE[] = {
 		     0,   0,   0,   0,   0,   0,   0,   0,
 		     0,   0,   0,   0,   0,   0,   0,   0,
@@ -93,18 +55,6 @@ public class Evaluator {
 		     0,  30,   0,   0,   0,   0,  30,   0,
 		     0,   0, -10,   0,   0, -10,   0,   0
 	};
-
-	// Experiment
-//	private static final int ROOK_SCORE[] = {
-//			0, 3, 5, 5, 5, 5, 3, 0,
-//			15, 20, 20, 20, 20, 20, 20, 15,
-//			0, 0, 0, 0, 0, 0, 0, 0,
-//			0, 0, 0, 0, 0, 0, 0, 0,
-//			-2, 0, 0, 0, 0, 0, 0, -2,
-//			-2, 0, 0, 2, 2, 0, 0, -2,
-//			-3, 2, 5, 5, 5, 5, 2, -3,
-//			0, 3, 5, 5, 5, 5, 3, 0
-//	};
 
 	protected static final int ROOK_SCORE[] = {
 		    50,  50,  50,  50,  50,  50,  50,  50,
@@ -117,7 +67,6 @@ public class Evaluator {
 		     0,   0,   0,  20,  20,   0,   0,   0
 	};
 
-	// Experiment
 	protected static final int QUEEN_SCORE[] = {
 			-10, -5, 0, 0, 0, 0, -5, -10,
 			-5, 0, 5, 5, 5, 5, 0, -5,
@@ -128,18 +77,6 @@ public class Evaluator {
 			-5, 0, 5, 5, 5, 5, 0, -5,
 			-10, -5, 0, 0, 0, 0, -5, -10
 	};
-
-	// Experiment
-//	private static final int KING_SCORE[] = {
-//			-22, -35, -40, -40, -40, -40, -35, -22,
-//			-22, -35, -40, -40, -40, -40, -35, -22,
-//			-25, -35, -40, -45, -45, -40, -35, -25,
-//			-15, -30, -35, -40, -40, -35, -30, -15,
-//			-10, -15, -20, -25, -25, -20, -15, -10,
-//			4, -2, -5, -15, -15, -5, -2, 4,
-//			16, 14, 7, -3, -3, 7, 14, 16,
-//			24, 24, 9, 0, 0, 9, 24, 24
-//	};
 
 	protected static final int KING_SCORE[] = {
 		     0,   0,   0,   0,   0,   0,   0,   0,
