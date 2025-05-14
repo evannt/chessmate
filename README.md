@@ -14,10 +14,13 @@ This project is a chess engine that can be used to play, practice, and improve y
 
 ## :tv: Demo
 
+### Game Menu
 ![ChessmateMenuGif](https://github.com/user-attachments/assets/31320ecf-8d1c-4ef4-8b2e-415a54dae679)
 
+### Fools Mate
 ![FoolsMateGif](https://github.com/user-attachments/assets/3bf2adcb-4f69-416c-819d-12cec825f67c)
 
+### Player vs. Bot
 ![BBotGif](https://github.com/user-attachments/assets/9b7a81ab-8a9a-4f10-94ca-f1c6d1666369)
 
 ![WBotGif](https://github.com/user-attachments/assets/81813c05-9be2-4665-9e5c-a35eae7c1b9f)
