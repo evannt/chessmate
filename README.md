@@ -34,8 +34,20 @@ git clone https://github.com/evannt/Chessmate.git
 
 ### Compile and Run
 
+#### **IDE**
+
+Import the project into your favorite IDE and run the Main class
+
+#### **Maven** (Recommended)
+
+```
+mvn clean package -DskipTests
+java -jar target/chessmate.jar
+```
+
+#### **Bash**
+
 ``` bash
-# Bash
 javac -d ./bin src/**/*.java
 java -cp ./bin main.Main
 ```
