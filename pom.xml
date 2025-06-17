@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.chessmate.evant</groupId>
   <artifactId>chessmate</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
   
   <dependencies>
   	<dependency>
@@ -19,6 +19,7 @@
     </dependency>
   </dependencies>
   <build>
+    <finalName>chessmate</finalName>
     <sourceDirectory>src</sourceDirectory>
     <testSourceDirectory>test</testSourceDirectory>
     <testResources>
@@ -35,6 +36,17 @@
         <version>3.8.1</version>
         <configuration>
           <release>16</release>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.2</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>main.Main</mainClass>
+            </manifest>
+          </archive>
         </configuration>
       </plugin>
     </plugins>
